@@ -1,1 +1,2360 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<title>平良商店 お弁当注文</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Kaisei+Decol:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFBF5;--surface:#FFFFFF;--primary:#C8401A;--primary-light:#E8602A;
+  --accent:#F4A636;--accent2:#2D6A4F;--green:#06C755;--blue:#1A5CB8;
+  --text:#1C1008;--text-sub:#7A6A5A;--border:#EDE0D0;--radius:16px;
+  --shadow:0 2px 16px rgba(200,64,26,0.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+body{background:var(--bg);font-family:'Noto Sans JP',sans-serif;color:var(--text);min-height:100vh;-webkit-overflow-scrolling:touch;}
+button{-webkit-appearance:none;cursor:pointer;}
 
+/* HEADER */
+header{background:var(--primary);color:white;padding:calc(14px + env(safe-area-inset-top)) 18px 12px;position:sticky;top:0;z-index:200;box-shadow:0 3px 16px rgba(200,64,26,0.35);}
+.header-inner{max-width:720px;margin:0 auto;}
+.header-top{display:flex;align-items:flex-start;justify-content:space-between;}
+.header-title{font-family:'Kaisei Decol',serif;font-size:1.1rem;font-weight:700;}
+.header-sub{font-size:0.65rem;opacity:0.85;margin-top:2px;}
+.header-right{text-align:right;flex-shrink:0;}
+.today-date{font-family:'Kaisei Decol',serif;font-size:0.9rem;font-weight:700;}
+.deadline-info{font-size:0.62rem;opacity:0.88;margin-top:2px;}
+.status-bar{margin-top:9px;padding:7px 12px;border-radius:10px;font-size:0.74rem;font-weight:700;display:flex;align-items:center;gap:8px;}
+.status-bar.open{background:rgba(255,255,255,0.18);}
+.status-bar.closed{background:rgba(0,0,0,0.22);}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.status-dot.green{background:#4fffb0;box-shadow:0 0 6px #4fffb0;}
+.status-dot.red{background:#ff6060;}
+.timer-val{margin-left:auto;font-family:'Kaisei Decol',serif;font-size:0.9rem;}
+
+/* TABS */
+.tabs{display:flex;gap:4px;background:var(--surface);padding:4px;border-radius:14px;box-shadow:var(--shadow);margin-bottom:15px;overflow-x:auto;}
+.tab-btn{flex:1;min-width:52px;padding:9px 3px;border:none;background:transparent;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.68rem;font-weight:700;color:var(--text-sub);cursor:pointer;transition:all 0.2s;white-space:nowrap;min-height:44px;}
+.tab-btn.active{background:var(--primary);color:white;box-shadow:0 2px 8px rgba(200,64,26,0.3);}
+.badge{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:#1C1008;font-size:0.58rem;font-weight:900;width:15px;height:15px;border-radius:50%;margin-left:2px;}
+
+.container{max-width:720px;margin:0 auto;padding:15px 13px calc(100px + env(safe-area-inset-bottom));}
+.section{display:none;}.section.active{display:block;}
+
+/* NAME SELECTOR */
+.name-selector-wrap{margin-bottom:16px;}
+.field-label{display:block;font-size:0.74rem;font-weight:700;color:var(--text-sub);margin-bottom:5px;letter-spacing:0.05em;}
+.name-search-box{position:relative;}
+.name-search-input{
+  width:100%;padding:12px 40px 12px 14px;
+  border:2px solid var(--border);border-radius:12px;
+  font-family:'Noto Sans JP',sans-serif;font-size:16px;
+  background:white;color:var(--text);outline:none;
+  transition:border-color 0.2s;-webkit-appearance:none;
+}
+.name-search-input:focus{border-color:var(--primary);}
+.name-search-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:1rem;color:var(--text-sub);cursor:pointer;padding:4px;}
+.name-dropdown{
+  position:absolute;top:calc(100% + 4px);left:0;right:0;
+  background:white;border:2px solid var(--primary);border-radius:12px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:300;
+  max-height:240px;overflow-y:auto;display:none;
+}
+.name-dropdown.open{display:block;}
+.name-option{
+  padding:11px 14px;font-size:0.9rem;cursor:pointer;
+  border-bottom:1px solid var(--border);transition:background 0.15s;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.name-option:last-child{border-bottom:none;}
+.name-option:hover,.name-option.highlighted{background:#FFF5F0;}
+.name-option .furigana{font-size:0.65rem;color:var(--text-sub);}
+.selected-name-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--primary);color:white;
+  border-radius:24px;padding:8px 14px;
+  font-size:0.9rem;font-weight:700;margin-top:8px;
+}
+.selected-name-badge .clear-name{background:rgba(255,255,255,0.3);border:none;color:white;border-radius:50%;width:20px;height:20px;font-size:0.75rem;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+
+/* TODAY MENU */
+.today-menu-card{background:linear-gradient(135deg,#FFF3E8,#FFE8D0);border:2px solid var(--accent);border-radius:var(--radius);padding:13px 15px;margin-bottom:14px;position:relative;overflow:hidden;}
+.today-menu-card::before{content:'🍱';position:absolute;right:13px;top:50%;transform:translateY(-50%);font-size:2.4rem;opacity:0.12;}
+.today-menu-label{font-size:0.67rem;font-weight:700;color:var(--primary);letter-spacing:0.07em;margin-bottom:4px;}
+.today-menu-name{font-family:'Kaisei Decol',serif;font-size:1.1rem;font-weight:700;color:var(--primary);margin-bottom:4px;}
+.today-menu-sides{font-size:0.74rem;color:var(--text-sub);line-height:1.6;}
+
+/* BENTO */
+.bento-list{display:grid;gap:10px;}
+.bento-card{background:white;border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow);border:2px solid transparent;transition:all 0.22s;position:relative;overflow:hidden;}
+.bento-card::after{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--primary);border-radius:3px 0 0 3px;opacity:0;transition:opacity 0.2s;}
+.bento-card.selected{border-color:var(--primary);background:#FFF5F0;}
+.bento-card.selected::after{opacity:1;}
+.bento-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:9px;}
+.bento-num{width:27px;height:27px;background:var(--primary);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:0.76rem;flex-shrink:0;margin-top:2px;}
+.bento-name{font-size:0.91rem;font-weight:700;}
+.bento-price-tag{font-size:0.71rem;color:var(--primary);font-weight:700;margin-top:2px;}
+.bento-menu-detail{font-size:0.71rem;color:var(--text-sub);line-height:1.55;padding:6px 8px;background:#FAF5F0;border-radius:8px;margin-bottom:9px;}
+.bento-opts{display:flex;gap:7px;}
+.opt-btn{flex:1;padding:9px 4px;border:2px solid var(--border);border-radius:10px;background:white;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:0.78rem;font-weight:700;color:var(--text-sub);transition:all 0.18s;text-align:center;min-height:48px;}
+.opt-btn.selected{background:var(--primary);border-color:var(--primary);color:white;}
+.opt-sub{display:block;font-size:0.66rem;font-weight:400;margin-top:1px;opacity:0.85;}
+
+.submit-area{margin-top:18px;}
+.submit-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:white;border:none;border-radius:14px;font-family:'Kaisei Decol',serif;font-size:1rem;font-weight:700;letter-spacing:0.05em;cursor:pointer;box-shadow:0 4px 18px rgba(200,64,26,0.38);transition:all 0.2s;min-height:52px;}
+.submit-btn:active{opacity:0.85;}
+
+/* ORDER CART */
+.cart-area{margin-top:14px;}
+.cart-title{font-size:0.78rem;font-weight:700;color:var(--text-sub);margin-bottom:8px;}
+.cart-item{display:flex;align-items:center;justify-content:space-between;background:white;border-radius:10px;padding:10px 12px;margin-bottom:6px;box-shadow:var(--shadow);font-size:0.85rem;}
+.cart-item-name{font-weight:700;color:var(--text);}
+.cart-item-detail{font-size:0.75rem;color:var(--text-sub);margin-top:2px;}
+.cart-remove-btn{background:none;border:1px solid #ddd;border-radius:6px;padding:4px 8px;font-size:0.7rem;color:var(--text-sub);cursor:pointer;}
+.cart-empty{text-align:center;padding:16px;color:var(--text-sub);font-size:0.82rem;}
+
+/* CALENDAR */
+.calendar-wrap{background:var(--surface);border-radius:var(--radius);padding:13px;box-shadow:var(--shadow);margin-bottom:15px;}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
+.cal-title{font-family:'Kaisei Decol',serif;font-size:0.95rem;font-weight:700;color:var(--primary);}
+.cal-toggle{font-size:0.7rem;color:var(--text-sub);border:1px solid var(--border);background:none;border-radius:8px;padding:4px 9px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;min-height:32px;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.cal-dayname{text-align:center;font-size:0.62rem;font-weight:700;color:var(--text-sub);padding:3px 0;}
+.cal-dayname:first-child{color:#C8401A;}.cal-dayname:last-child{color:#1A5CB8;}
+.cal-cell{border-radius:6px;padding:3px 2px 4px;min-height:50px;font-size:0.62rem;border:1px solid transparent;}
+.cal-cell.other-month{opacity:0.27;}.cal-cell.today{background:#FFF0E8;border-color:var(--accent);}
+.cal-cell.sunday .cal-num{color:#C8401A;}.cal-cell.saturday .cal-num{color:#1A5CB8;}
+.cal-num{font-weight:700;font-size:0.69rem;display:block;margin-bottom:2px;text-align:center;}
+.cal-menu-main{font-size:0.55rem;font-weight:700;color:var(--primary);line-height:1.3;text-align:center;}
+.cal-menu-sub{font-size:0.49rem;color:var(--text-sub);line-height:1.2;text-align:center;margin-top:1px;}
+.cal-holiday-label{font-size:0.49rem;color:#C8401A;text-align:center;}
+
+/* SUMMARY / CARDS */
+.summary-card,.person-card,.line-preview-card,.receipt-card,.monthly-card{background:white;border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:13px;}
+.summary-heading{font-family:'Kaisei Decol',serif;font-size:0.95rem;font-weight:700;color:var(--primary);margin-bottom:11px;}
+.person-heading{font-family:'Kaisei Decol',serif;font-size:0.95rem;font-weight:700;color:var(--text);margin-bottom:11px;}
+.sum-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.85rem;}
+.sum-row:last-child{border-bottom:none;}
+.sum-count{font-family:'Kaisei Decol',serif;font-size:1.05rem;font-weight:700;color:var(--primary);}
+.total-band{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:white;border-radius:10px;padding:11px 14px;display:flex;justify-content:space-between;align-items:center;margin-top:11px;font-weight:700;}
+.total-num{font-family:'Kaisei Decol',serif;font-size:1.2rem;font-weight:700;}
+.person-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px dashed var(--border);font-size:0.82rem;}
+.person-row:last-child{border-bottom:none;}
+.person-name{font-weight:700;}.person-detail{color:var(--text-sub);font-size:0.73rem;text-align:right;line-height:1.4;}
+.line-preview-card{background:#F0FFF5;border:2px solid var(--green);}
+.line-preview-label{font-size:0.73rem;font-weight:700;color:var(--accent2);margin-bottom:9px;}
+.line-preview-body{background:white;border-radius:9px;padding:11px 13px;font-size:0.8rem;color:var(--text);line-height:1.7;font-family:'Noto Sans JP',sans-serif;white-space:pre-wrap;word-break:break-all;border:1px solid #C8EDD8;}
+.line-preview-note{font-size:0.68rem;color:var(--accent2);margin-top:7px;opacity:0.8;}
+
+/* BUTTONS */
+.line-btn{width:100%;padding:14px;background:var(--green);color:white;border:none;border-radius:14px;font-family:'Kaisei Decol',serif;font-size:0.94rem;font-weight:700;letter-spacing:0.04em;cursor:pointer;box-shadow:0 4px 18px rgba(6,199,85,0.38);transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:10px;min-height:52px;}
+.line-btn:active{opacity:0.85;}
+.line-logo{width:22px;height:22px;background:white;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.reset-btn{width:100%;padding:11px;margin-top:8px;border:2px solid var(--border);background:none;border-radius:12px;font-family:'Noto Sans JP',sans-serif;font-size:0.79rem;font-weight:700;color:var(--text-sub);cursor:pointer;transition:all 0.2s;min-height:44px;}
+.no-orders{text-align:center;padding:32px 20px;color:var(--text-sub);font-size:0.86rem;}
+.no-orders .ico{font-size:2.2rem;margin-bottom:7px;}
+
+/* RECEIPT */
+.receipt-upload-area{border:2px dashed var(--border);border-radius:14px;padding:20px 16px;text-align:center;cursor:pointer;transition:all 0.2s;background:#FAFAFA;margin-bottom:14px;}
+.receipt-upload-icon{font-size:2rem;margin-bottom:8px;}
+.receipt-upload-text{font-size:0.84rem;color:var(--text-sub);font-weight:700;}
+.receipt-upload-sub{font-size:0.71rem;color:var(--text-sub);margin-top:4px;opacity:0.7;}
+#receipt-file-input{display:none;}
+.receipt-date-select{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+.receipt-date-label{font-size:0.78rem;font-weight:700;color:var(--text-sub);white-space:nowrap;}
+.date-select{padding:8px 10px;border:2px solid var(--border);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:16px;background:white;color:var(--text);outline:none;-webkit-appearance:none;flex:1;min-width:100px;}
+.receipt-preview{margin-bottom:14px;text-align:center;}
+.receipt-preview img{max-width:100%;max-height:280px;border-radius:12px;box-shadow:var(--shadow);object-fit:contain;}
+.save-receipt-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--blue),#2A7AE2);color:white;border:none;border-radius:13px;font-family:'Kaisei Decol',serif;font-size:0.94rem;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(26,92,184,0.35);transition:all 0.2s;min-height:50px;}
+.receipt-list{display:grid;gap:10px;}
+.receipt-item{background:white;border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);display:flex;align-items:center;gap:12px;border:1px solid var(--border);}
+.receipt-thumb{width:56px;height:56px;border-radius:8px;object-fit:cover;flex-shrink:0;cursor:pointer;border:1px solid var(--border);}
+.receipt-info{flex:1;}
+.receipt-item-date{font-weight:700;font-size:0.88rem;}
+.receipt-item-status{font-size:0.68rem;color:var(--text-sub);margin-top:1px;}
+.receipt-delete-btn{padding:5px 10px;border:1px solid #DDD;background:none;border-radius:8px;font-size:0.7rem;color:var(--text-sub);cursor:pointer;flex-shrink:0;}
+
+/* MONTHLY */
+.monthly-header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.month-select{padding:7px 10px;border:2px solid var(--border);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:16px;background:white;color:var(--text);outline:none;-webkit-appearance:none;}
+.monthly-total-row{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:white;border-radius:11px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-weight:700;}
+.monthly-total-num{font-family:'Kaisei Decol',serif;font-size:1.18rem;font-weight:700;}
+.no-monthly{text-align:center;padding:30px 16px;color:var(--text-sub);font-size:0.84rem;}
+
+/* ADMIN */
+.admin-lock{background:#1C1008;color:white;border-radius:var(--radius);padding:24px 20px;text-align:center;margin-bottom:14px;}
+.admin-lock-title{font-family:'Kaisei Decol',serif;font-size:1rem;font-weight:700;margin-bottom:14px;}
+.admin-pw-input{width:100%;padding:11px 14px;border:2px solid #444;border-radius:10px;background:#333;color:white;font-family:'Noto Sans JP',sans-serif;font-size:16px;outline:none;margin-bottom:10px;-webkit-appearance:none;text-align:center;letter-spacing:0.1em;}
+.admin-unlock-btn{width:100%;padding:12px;background:var(--accent);color:#1C1008;border:none;border-radius:10px;font-family:'Kaisei Decol',serif;font-size:0.95rem;font-weight:700;cursor:pointer;min-height:48px;}
+.csv-btn{width:100%;padding:13px;background:linear-gradient(135deg,#2D6A4F,#3D8A6F);color:white;border:none;border-radius:13px;font-family:'Kaisei Decol',serif;font-size:0.94rem;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(45,106,79,0.35);min-height:50px;margin-bottom:10px;}
+.admin-section-title{font-size:0.78rem;font-weight:700;color:var(--text-sub);margin:16px 0 8px;letter-spacing:0.05em;}
+.name-summary-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:0.86rem;}
+.name-summary-row:last-child{border-bottom:none;}
+.name-summary-count{font-family:'Kaisei Decol',serif;font-weight:700;color:var(--primary);font-size:1rem;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.hidden{display:none;}
+.modal-img{max-width:100%;max-height:85vh;border-radius:12px;object-fit:contain;}
+.modal-close{position:fixed;top:calc(16px + env(safe-area-inset-top));right:18px;background:white;border:none;border-radius:50%;width:36px;height:36px;font-size:1.1rem;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;z-index:1001;}
+
+/* VENDOR VIEW */
+/* TOAST */
+.toast{position:fixed;bottom:calc(70px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:#1C1008;color:white;padding:10px 20px;border-radius:28px;font-size:0.8rem;font-weight:700;opacity:0;transition:all 0.28s;z-index:9999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.3);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+@media(max-width:390px){
+  .header-title{font-size:0.95rem;}
+  .bento-opts{flex-direction:column;}
+  .cal-cell{min-height:42px;}
+  .cal-menu-sub{display:none;}
+  .tab-btn{font-size:0.64rem;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-top">
+      <div>
+        <div class="header-title">🍱 平良商店 お弁当注文</div>
+        <div class="header-sub">登野城漁港内マンタ公園向かい ／ ☎ 0980-87-0890</div>
+      </div>
+      <div class="header-right">
+        <div class="today-date" id="today-date-hdr">―</div>
+        <div class="deadline-info">前日13:00〜当日9:20受付</div>
+      </div>
+    </div>
+    <div class="status-bar" id="status-bar">
+      <span class="status-dot" id="status-dot"></span>
+      <span id="status-text"></span>
+      <span class="timer-val" id="timer-val"></span>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('order')">📝 注文</button>
+    <button class="tab-btn" onclick="switchTab('calendar')">📅 献立</button>
+    <button class="tab-btn" onclick="switchTab('summary')">📊 集計 <span class="badge" id="count-badge">0</span></button>
+    <button class="tab-btn" onclick="switchTab('receipt')">🧾 領収書</button>
+    <button class="tab-btn" onclick="switchTab('monthly')">📋 月次</button>
+    <button class="tab-btn" onclick="switchTab('history')">📜 履歴</button>
+    <button class="tab-btn" onclick="switchTab('admin')">🔐 管理</button>
+  </div>
+
+  <!-- ===== ORDER ===== -->
+  <div class="section active" id="section-order">
+    <div class="today-menu-card" id="today-menu-card"></div>
+
+    <!-- 名前選択 -->
+    <div class="name-selector-wrap">
+      <label class="field-label">👤 お名前を選択または入力</label>
+      <div class="name-search-box">
+        <input class="name-search-input" id="name-search-input" type="text"
+          placeholder="名前 or フリガナで検索..."
+          autocomplete="off" oninput="onNameInput()" onfocus="onNameFocus()" onblur="onNameBlur()">
+        <button class="name-search-clear" onclick="clearNameInput()" tabindex="-1">✕</button>
+        <div class="name-dropdown" id="name-dropdown"></div>
+      </div>
+      <div id="selected-name-display"></div>
+    </div>
+
+    <!-- 弁当選択 -->
+    <div class="bento-list" id="bento-list"></div>
+
+    <!-- カート -->
+    <div class="cart-area" id="cart-area"></div>
+
+    <div class="submit-area">
+      <button class="submit-btn" onclick="orderAndSubmit()">✅ 注文を確定する</button>
+    </div>
+  </div>
+
+  <!-- ===== CALENDAR ===== -->
+  <div class="section" id="section-calendar">
+    <div class="calendar-wrap">
+      <div class="cal-header">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button onclick="calPrev()" style="border:1px solid var(--border);background:none;border-radius:8px;padding:4px 8px;font-size:0.8rem;cursor:pointer;min-height:32px;">◀</button>
+          <div class="cal-title" id="cal-title-text">📅 カレンダー</div>
+          <button onclick="calNext()" style="border:1px solid var(--border);background:none;border-radius:8px;padding:4px 8px;font-size:0.8rem;cursor:pointer;min-height:32px;">▶</button>
+        </div>
+        <button class="cal-toggle" onclick="toggleCalDetail()" id="cal-toggle-btn">副菜を隠す</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+  </div>
+
+  <!-- ===== SUMMARY ===== -->
+  <div class="section" id="section-summary">
+    <div id="summary-content"></div>
+    <div id="action-area" style="display:none">
+      <button class="line-btn" onclick="sendToLine()">
+        <div class="line-logo"><svg width="15" height="15" viewBox="0 0 24 24" fill="#06C755"><path d="M19.365 9.863c.349 0 .63.285.63.63 0 .344-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.628-.63.628H16.98c-.344 0-.629-.283-.629-.628V8.108c0-.345.285-.63.63-.63h2.385c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.283-.63-.628V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.628-.629.628M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg></div>
+        LINEで平良商店へ注文を送る
+      </button>
+      <button class="reset-btn" onclick="resetDailyOrders()">🗑️ 本日の注文をリセット（翌朝に実行）</button>
+    </div>
+  </div>
+
+  <!-- ===== RECEIPT ===== -->
+  <div class="section" id="section-receipt">
+    <div class="receipt-card">
+      <div class="summary-heading">🧾 領収書アップロード</div>
+      <div class="receipt-date-select">
+        <span class="receipt-date-label">📅 日付：</span>
+        <select class="date-select" id="receipt-month"></select>
+        <select class="date-select" id="receipt-day"></select>
+      </div>
+      <div class="receipt-upload-area" onclick="document.getElementById('receipt-file-input').click()">
+        <div class="receipt-upload-icon">📷</div>
+        <div class="receipt-upload-text">タップして写真を選択</div>
+        <div class="receipt-upload-sub">カメラ撮影またはライブラリから選択</div>
+      </div>
+      <input type="file" id="receipt-file-input" accept="image/*" capture="environment">
+      <div class="receipt-preview" id="receipt-preview" style="display:none">
+        <img id="receipt-preview-img" src="" alt="領収書プレビュー">
+      </div>
+      <button class="save-receipt-btn" onclick="saveReceipt()">💾 この領収書を保存する</button>
+    </div>
+    <div class="receipt-card">
+      <div class="summary-heading">📁 保存済み領収書一覧</div>
+      <div class="receipt-list" id="receipt-list"></div>
+    </div>
+  </div>
+
+  <!-- ===== MONTHLY ===== -->
+  <div class="section" id="section-monthly">
+    <div class="monthly-card">
+      <div class="monthly-header-row">
+        <div class="summary-heading" style="margin-bottom:0">📋 月次集計レポート</div>
+        <select class="month-select" id="monthly-month-select" onchange="renderMonthly()"></select>
+      </div>
+      <div id="monthly-content"></div>
+    </div>
+    <div id="monthly-action" style="display:none">
+      <div style="background:#F0FFF5;border:2px solid var(--green);border-radius:14px;padding:14px 15px;margin-bottom:10px;">
+        <div style="font-size:0.75rem;font-weight:700;color:var(--accent2);margin-bottom:10px;">📤 平良商店さんへの送り方</div>
+        <div style="font-size:0.78rem;color:var(--text-sub);line-height:1.7;margin-bottom:12px;">
+          ① 下のボタンで平良商店用ページを開く<br>
+          ② そのページをLINEで平良商店さんに送る
+        </div>
+        <button class="line-btn" onclick="openVendorPage()" style="background:var(--primary);box-shadow:0 4px 18px rgba(200,64,26,0.38);">
+          <span style="font-size:1.1rem;">🏪</span>平良商店用ページを開く
+        </button>
+      </div>
+      <!-- テスト用 -->
+      <div style="margin-top:10px;background:#FFF8E8;border:2px dashed var(--accent);border-radius:14px;padding:14px 15px;">
+        <div style="font-size:0.75rem;font-weight:700;color:#B87800;margin-bottom:10px;">🧪 テスト用</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button onclick="injectTestData()" style="padding:10px 6px;background:var(--accent);color:white;border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;min-height:44px;">📥 データ投入</button>
+          <button onclick="clearTestData()" style="padding:10px 6px;background:white;color:var(--text-sub);border:2px solid var(--border);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;min-height:44px;">🗑️ データ削除</button>
+          <button onclick="testSendMonthlyLine()" style="grid-column:1/-1;padding:10px 6px;background:#1A5CB8;color:white;border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;min-height:44px;">📨 月次LINEをテスト送信</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== HISTORY ===== -->
+  <div class="section" id="section-history">
+    <div class="summary-card">
+      <div class="summary-heading">📜 本日の注文履歴（取消・編集）</div>
+      <div id="history-content"></div>
+    </div>
+  </div>
+
+  <!-- ===== ADMIN ===== -->
+  <div class="section" id="section-admin">
+    <div id="admin-locked-view">
+      <div class="admin-lock">
+        <div class="admin-lock-title">🔐 管理者ページ</div>
+        <input class="admin-pw-input" id="admin-pw-input" type="password" placeholder="パスワードを入力" maxlength="20">
+        <button class="admin-unlock-btn" onclick="adminUnlock()">ロック解除</button>
+      </div>
+    </div>
+    <div id="admin-unlocked-view" style="display:none">
+      <div class="summary-card">
+        <div class="summary-heading">👥 名前別注文集計（社内用）</div>
+        <div style="font-size:0.75rem;color:var(--text-sub);margin-bottom:12px;">月を選択してください</div>
+        <select class="month-select" id="admin-month-select" onchange="renderAdminSummary()" style="width:100%;margin-bottom:14px;"></select>
+        <div id="admin-name-summary"></div>
+      </div>
+      <!-- Slack Webhook設定 -->
+      <div style="background:#F8F0FF;border:2px solid #6B3FA0;border-radius:14px;padding:14px 15px;margin-bottom:14px;">
+        <div style="font-size:0.8rem;font-weight:700;color:#6B3FA0;margin-bottom:6px;">
+          <svg style="width:16px;height:16px;vertical-align:middle;margin-right:4px;" viewBox="0 0 24 24" fill="#6B3FA0"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zm1.271 0a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zm0 1.271a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zm10.122 2.521a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zm-1.268 0a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zm-2.523 10.122a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zm0-1.268a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/></svg>
+          Slack 自動通知設定
+        </div>
+        <div style="font-size:0.74rem;color:var(--text-sub);line-height:1.6;margin-bottom:10px;">
+          Webhook URLを設定すると、LINEと同時にSlackにも自動送信されます。<br>
+          注文・月次どちらも対応しています。
+        </div>
+        <input id="slack-webhook-input" type="url" placeholder="https://hooks.slack.com/services/..." style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;-webkit-appearance:none;margin-bottom:8px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <button onclick="saveSlackWebhookSetting()" style="padding:11px;background:#6B3FA0;color:white;border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">💾 保存</button>
+          <button onclick="testSlackWebhook()" style="padding:11px;background:white;color:#6B3FA0;border:2px solid #6B3FA0;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">🧪 テスト送信</button>
+        </div>
+        <button onclick="clearSlackWebhook()" style="width:100%;padding:9px;background:white;color:var(--text-sub);border:2px solid var(--border);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;min-height:40px;">🗑️ クリア</button>
+        <div id="slack-status" style="margin-top:8px;font-size:0.76rem;text-align:center;"></div>
+      </div>
+
+      <!-- アプリ公開URL設定 -->
+      <div style="background:#FFF8E8;border:2px solid var(--accent);border-radius:14px;padding:14px 15px;margin-bottom:14px;">
+        <div style="font-size:0.8rem;font-weight:700;color:#B87800;margin-bottom:6px;">🌐 アプリ公開URL設定</div>
+        <div style="font-size:0.74rem;color:var(--text-sub);line-height:1.6;margin-bottom:10px;">
+          GitHub PagesなどでアプリをURLで公開した場合に設定してください。<br>
+          月次LINEメッセージに領収書確認リンクとして自動で追加されます。
+        </div>
+        <input id="app-public-url-input" type="url" placeholder="https://あなたのID.github.io/bento-order/" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;-webkit-appearance:none;margin-bottom:8px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button onclick="saveAppPublicUrlSetting()" style="padding:11px;background:var(--accent);color:white;border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">💾 保存</button>
+          <button onclick="clearAppPublicUrl()" style="padding:11px;background:white;color:var(--text-sub);border:2px solid var(--border);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">🗑️ クリア</button>
+        </div>
+        <div id="app-url-status" style="margin-top:8px;font-size:0.76rem;text-align:center;"></div>
+      </div>
+
+      <!-- LINE グループURL設定 -->
+      <div style="background:#F0FFF5;border:2px solid var(--green);border-radius:14px;padding:14px 15px;margin-bottom:14px;">
+        <div style="font-size:0.8rem;font-weight:700;color:var(--accent2);margin-bottom:6px;">💬 LINEグループURL設定</div>
+        <div style="font-size:0.74rem;color:var(--text-sub);line-height:1.6;margin-bottom:10px;">
+          グループURLを設定すると、注文内容が自動コピーされてグループが開きます。<br>
+          あとは貼り付けて送信ボタンを押すだけ！
+        </div>
+        <input id="line-group-url-input" type="url" placeholder="https://line.me/R/ti/g/..." style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;-webkit-appearance:none;margin-bottom:8px;" value="">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button onclick="saveLineGroupUrlSetting()" style="padding:11px;background:var(--green);color:white;border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">💾 保存</button>
+          <button onclick="clearLineGroupUrl()" style="padding:11px;background:white;color:var(--text-sub);border:2px solid var(--border);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">🗑️ クリア</button>
+        </div>
+        <div id="line-group-status" style="margin-top:8px;font-size:0.76rem;text-align:center;"></div>
+      </div>
+
+      <button class="csv-btn" onclick="exportCSV()">📥 CSVエクスポート（○○月弁当注文集計）</button>
+
+      <!-- メニュー登録 -->
+      <div style="margin-top:20px;">
+        <div class="summary-heading" style="margin-bottom:12px;">📅 日替わり弁当メニュー登録</div>
+
+        <!-- AI自動読み取りエリア -->
+        <div style="background:linear-gradient(135deg,#EEF4FF,#E8F0FC);border:2px solid var(--blue);border-radius:14px;padding:14px 15px;margin-bottom:16px;">
+          <div style="font-size:0.8rem;font-weight:700;color:var(--blue);margin-bottom:6px;">🤖 AIでカレンダーを自動読み取り</div>
+          <div style="font-size:0.74rem;color:var(--text-sub);margin-bottom:12px;line-height:1.6;">
+            平良商店さんのカレンダー画像またはPDFをアップするだけで、<br>全メニューを自動登録します
+          </div>
+          <div id="ai-upload-area" onclick="document.getElementById('ai-calendar-input').click()" style="border:2px dashed #B8CFF0;border-radius:12px;padding:18px;text-align:center;cursor:pointer;background:white;margin-bottom:10px;transition:all 0.2s;">
+            <div style="font-size:1.8rem;margin-bottom:6px;">📷</div>
+            <div style="font-size:0.84rem;font-weight:700;color:var(--blue);">カレンダー画像・PDFを選択</div>
+            <div style="font-size:0.7rem;color:var(--text-sub);margin-top:3px;">JPG / PNG / PDF 対応</div>
+          </div>
+          <input type="file" id="ai-calendar-input" accept="image/*,application/pdf" style="display:none;">
+          <div id="ai-preview-area" style="display:none;margin-bottom:10px;">
+            <img id="ai-preview-img" src="" style="width:100%;border-radius:10px;border:1px solid var(--border);" alt="カレンダープレビュー">
+          </div>
+          <div id="ai-year-month-select" style="display:none;margin-bottom:10px;">
+            <div style="font-size:0.76rem;font-weight:700;color:var(--text-sub);margin-bottom:6px;">対象年月を確認・修正してください</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <select id="ai-year" style="padding:8px;border:2px solid var(--border);border-radius:10px;font-size:16px;font-family:'Noto Sans JP',sans-serif;background:white;-webkit-appearance:none;outline:none;"></select>
+              <select id="ai-month" style="padding:8px;border:2px solid var(--border);border-radius:10px;font-size:16px;font-family:'Noto Sans JP',sans-serif;background:white;-webkit-appearance:none;outline:none;"></select>
+            </div>
+          </div>
+          <button id="ai-read-btn" onclick="aiReadCalendar()" style="display:none;width:100%;padding:12px;background:linear-gradient(135deg,var(--blue),#2A7AE2);color:white;border:none;border-radius:12px;font-family:'Kaisei Decol',serif;font-size:0.95rem;font-weight:700;cursor:pointer;min-height:48px;box-shadow:0 4px 16px rgba(26,92,184,0.35);">🤖 AIでメニューを読み取る</button>
+          <div id="ai-status" style="margin-top:10px;font-size:0.8rem;text-align:center;color:var(--text-sub);display:none;"></div>
+          <div id="ai-result-area" style="margin-top:12px;display:none;">
+            <div style="font-size:0.78rem;font-weight:700;color:var(--accent2);margin-bottom:8px;">✅ 読み取り結果（確認して登録してください）</div>
+            <div id="ai-result-list" style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;background:white;padding:8px;font-size:0.78rem;"></div>
+            <button onclick="aiRegisterAll()" style="width:100%;margin-top:10px;padding:12px;background:linear-gradient(135deg,var(--accent2),#3D8A6F);color:white;border:none;border-radius:12px;font-family:'Kaisei Decol',serif;font-size:0.95rem;font-weight:700;cursor:pointer;min-height:48px;">📅 全メニューを一括登録する</button>
+          </div>
+        </div>
+
+        <div style="font-size:0.78rem;font-weight:700;color:var(--text-sub);margin-bottom:10px;">✏️ 手動で1日ずつ登録</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+          <select id="menu-reg-year" style="padding:8px;border:2px solid var(--border);border-radius:10px;font-size:16px;font-family:'Noto Sans JP',sans-serif;background:white;-webkit-appearance:none;outline:none;"></select>
+          <select id="menu-reg-month" style="padding:8px;border:2px solid var(--border);border-radius:10px;font-size:16px;font-family:'Noto Sans JP',sans-serif;background:white;-webkit-appearance:none;outline:none;"></select>
+        </div>
+        <select id="menu-reg-day" style="width:100%;padding:8px;border:2px solid var(--border);border-radius:10px;font-size:16px;font-family:'Noto Sans JP',sans-serif;background:white;-webkit-appearance:none;outline:none;margin-bottom:10px;"></select>
+        <input id="menu-reg-main" type="text" placeholder="日替わりメニュー名（例：トンカツ）" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;margin-bottom:8px;-webkit-appearance:none;">
+        <input id="menu-reg-sides" type="text" placeholder="副菜（カンマ区切り　例：回鍋肉,豚バラ大根,白和え）" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;margin-bottom:8px;-webkit-appearance:none;">
+        <input id="menu-reg-holiday" type="text" placeholder="祝日名（祝日の場合のみ　例：春分の日）" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;margin-bottom:12px;-webkit-appearance:none;">
+        <button onclick="saveMenuEntry()" style="width:100%;padding:13px;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:white;border:none;border-radius:13px;font-family:'Kaisei Decol',serif;font-size:0.95rem;font-weight:700;cursor:pointer;min-height:50px;box-shadow:0 4px 16px rgba(200,64,26,0.35);">📅 このメニューを登録する</button>
+        <div id="menu-reg-preview" style="margin-top:14px;"></div>
+        <div style="margin-top:16px;">
+          <div style="font-size:0.78rem;font-weight:700;color:var(--text-sub);margin-bottom:8px;">登録済みメニュー一覧</div>
+          <div id="menu-reg-list"></div>
+        </div>
+      </div>
+
+      <button class="reset-btn" onclick="adminResetAll()" style="border-color:#C8401A;color:#C8401A;margin-top:16px;">⚠️ 全データをリセット</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay hidden" id="modal-overlay" onclick="closeModal()">
+  <button class="modal-close" onclick="closeModal()">✕</button>
+  <img class="modal-img" id="modal-img" src="" alt="領収書">
+</div>
+
+<!-- 平良商店用ビュー -->
+<div id="vendor-view" style="display:none;position:fixed;inset:0;overflow-y:auto;background:#FFFBF5;font-family:'Noto Sans JP',sans-serif;z-index:500;-webkit-overflow-scrolling:touch;">
+  <button onclick="closeVendorView()" style="position:fixed;top:calc(10px + env(safe-area-inset-top));right:14px;z-index:600;background:white;border:none;border-radius:50%;width:34px;height:34px;font-size:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;cursor:pointer;">✕</button>
+  <div style="background:#2D6A4F;color:white;padding:calc(16px + env(safe-area-inset-top)) 18px 14px;position:sticky;top:0;z-index:100;box-shadow:0 3px 12px rgba(0,0,0,0.2);">
+    <div style="max-width:640px;margin:0 auto;display:flex;align-items:flex-start;justify-content:space-between;">
+      <div>
+        <div style="font-family:'Kaisei Decol',serif;font-size:1.1rem;font-weight:700;">🍱 お弁当代金 月次集計</div>
+        <div style="font-size:0.72rem;opacity:0.85;margin-top:3px;" id="vendor-header-sub"></div>
+        <div style="font-size:0.65rem;opacity:0.7;margin-top:2px;" id="vendor-last-updated"></div>
+      </div>
+      <button onclick="vendorManualRefresh()" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:white;border-radius:8px;padding:5px 10px;font-size:0.7rem;font-family:'Noto Sans JP',sans-serif;cursor:pointer;margin-top:4px;white-space:nowrap;">🔄 更新</button>
+    </div>
+  </div>
+  <div style="max-width:640px;margin:0 auto;padding:18px 14px calc(40px + env(safe-area-inset-bottom));">
+    <div id="vendor-content"></div>
+    <div style="margin-top:18px;background:white;border-radius:14px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+      <div style="font-size:0.72rem;color:#7A6A5A;line-height:1.8;" id="vendor-message"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== SUPABASE 設定 =====
+const SUPABASE_URL='https://mfkqpsmfteiolgeqgnfx.supabase.co';
+const SUPABASE_KEY='sb_publishable_NV_AQykUo40ReFLWAuYoHQ_9m-Sn_ql';
+
+async function sbFetch(path, method='GET', body=null){
+  const opts={
+    method,
+    headers:{
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer '+SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': method==='POST'?'return=representation':''
+    }
+  };
+  if(body) opts.body=JSON.stringify(body);
+  const res=await fetch(SUPABASE_URL+'/rest/v1/'+path, opts);
+  if(!res.ok){
+    const err=await res.text();
+    throw new Error('Supabase error: '+err);
+  }
+  const text=await res.text();
+  return text?JSON.parse(text):[];
+}
+
+// 注文をSupabaseに保存
+async function saveOrderToCloud(order){
+  try{
+    await sbFetch('orders', 'POST', {
+      date: order.date,
+      name: order.name,
+      bento_id: order.bentoId,
+      bento_name: order.bentoName,
+      emoji: order.emoji,
+      oomori: order.oomori,
+      price: order.price,
+      time: order.time
+    });
+  }catch(e){ console.error('クラウド保存エラー:', e); }
+}
+
+// 当日の注文をSupabaseから読み込む
+async function loadOrdersFromCloud(dateKey){
+  try{
+    const rows=await sbFetch(`orders?date=eq.${dateKey}&order=created_at.asc`);
+    return rows.map(r=>({
+      name: r.name,
+      bentoId: r.bento_id,
+      bentoName: r.bento_name,
+      emoji: r.emoji,
+      oomori: r.oomori,
+      price: r.price,
+      time: r.time,
+      date: r.date,
+      cloud_id: r.id
+    }));
+  }catch(e){ console.error('クラウド読み込みエラー:', e); return []; }
+}
+
+// Supabaseから注文を削除
+async function deleteOrderFromCloud(cloudId){
+  try{
+    await sbFetch(`orders?id=eq.${cloudId}`, 'DELETE');
+  }catch(e){ console.error('クラウド削除エラー:', e); }
+}
+
+// 月次履歴をSupabaseに保存
+async function saveDailyHistoryToCloud(dateKey, entry){
+  try{
+    await sbFetch('daily_history', 'POST', {
+      date_key: dateKey,
+      total: entry.total,
+      count: entry.count,
+      summary: entry.summary,
+      orders: entry.orders
+    });
+  }catch(e){
+    // 既存データはupsert
+    try{
+      await sbFetch(`daily_history?date_key=eq.${dateKey}`, 'PATCH', {
+        total: entry.total,
+        count: entry.count,
+        summary: entry.summary,
+        orders: entry.orders
+      });
+    }catch(e2){ console.error('月次クラウド保存エラー:', e2); }
+  }
+}
+
+// ===== メニューデータクラウド保存 =====
+async function saveMenuDataToCloud(monthKey, data){
+  try{
+    const existing=await sbFetch(`menu_data?month_key=eq.${monthKey}`);
+    if(existing.length>0){
+      await sbFetch(`menu_data?month_key=eq.${monthKey}`,'PATCH',{data});
+    }else{
+      await sbFetch('menu_data','POST',{month_key:monthKey,data});
+    }
+  }catch(e){console.error('メニュークラウド保存エラー:',e);}
+}
+
+async function loadMenuDataFromCloud(){
+  try{
+    const rows=await sbFetch('menu_data?order=month_key.asc');
+    const result={};
+    rows.forEach(r=>{Object.assign(result,{[r.month_key]:r.data});});
+    return result;
+  }catch(e){console.error('メニュークラウド読み込みエラー:',e);return{};}
+}
+
+// ===== 領収書クラウド保存 =====
+async function saveReceiptToCloud(dateKey, dataUrl){
+  try{
+    // 既存チェック
+    const existing=await sbFetch(`receipts?date_key=eq.${dateKey}`);
+    if(existing.length>0){
+      await sbFetch(`receipts?date_key=eq.${dateKey}`,'PATCH',{
+        image_data: dataUrl,
+        saved_at: new Date().toLocaleString('ja-JP')
+      });
+    } else {
+      await sbFetch('receipts','POST',{
+        date_key: dateKey,
+        image_data: dataUrl,
+        saved_at: new Date().toLocaleString('ja-JP')
+      });
+    }
+    return true;
+  }catch(e){
+    console.error('領収書クラウド保存エラー:',e);
+    return false;
+  }
+}
+
+async function loadReceiptsFromCloud(){
+  try{
+    const rows=await sbFetch('receipts?order=date_key.asc');
+    const result={};
+    rows.forEach(r=>{
+      result[r.date_key]={
+        dataUrl: r.image_data,
+        savedAt: r.saved_at
+      };
+    });
+    return result;
+  }catch(e){
+    console.error('領収書クラウド読み込みエラー:',e);
+    return {};
+  }
+}
+
+async function deleteReceiptFromCloud(dateKey){
+  try{
+    await sbFetch(`receipts?date_key=eq.${dateKey}`,'DELETE');
+  }catch(e){
+    console.error('領収書クラウド削除エラー:',e);
+  }
+}
+
+// 月次履歴をSupabaseから読み込む
+async function loadDailyHistoryFromCloud(monthPrefix){
+  try{
+    const rows=await sbFetch(`daily_history?date_key=like.${monthPrefix}*&order=date_key.asc`);
+    const result={};
+    rows.forEach(r=>{
+      result[r.date_key]={
+        total: r.total,
+        count: r.count,
+        summary: r.summary||[],
+        orders: r.orders||[]
+      };
+    });
+    return result;
+  }catch(e){ console.error('月次クラウド読み込みエラー:', e); return {}; }
+}
+
+// ===== 社員名リスト（雇用順・フリガナ付き） =====
+const EMPLOYEES=[
+  {name:'寄川 恵子',  kana:'ヨリカワ ケイコ'},
+  {name:'宮良 崇',    kana:'ミヤラ タカシ'},
+  {name:'浦添 朝人',  kana:'ウラソエ アサト'},
+  {name:'浜崎 慎也',  kana:'ハマザキ シンヤ'},
+  {name:'東蔵盛 肇',  kana:'ヒガクラモリ ハジメ'},
+  {name:'大山 健太',  kana:'オオヤマ ケンタ'},
+  {name:'玉城 亜良',  kana:'タマキ アラ'},
+  {name:'池原 元気',  kana:'イケハラ ゲンキ'},
+  {name:'斉藤 隆之',  kana:'サイトウ タカユキ'},
+  {name:'福本 要',    kana:'フクモト カナメ'},
+  {name:'王滝 将章',  kana:'オウタキ マサアキ'},
+  {name:'西里 洋樹',  kana:'ニシザト ヒロキ'},
+  {name:'大盛 俊',    kana:'オオモリ シュン'},
+  {name:'中澤 勇太',  kana:'ナカザワ ユウタ'},
+  {name:'吉田 悠真',  kana:'ヨシダ ユウマ'},
+  {name:'知念 武蔵',  kana:'チネン ムサシ'},
+  {name:'慶田盛 大介',kana:'ケダモリ ダイスケ'},
+  {name:'坂上 昌彦',  kana:'サカウエ マサヒコ'},
+  {name:'崎原 盛奨',  kana:'サキハラ モリショウ'},
+  {name:'松竹 梨乃',  kana:'マツタケ リノ'},
+  {name:'大山 俊樹',  kana:'オオヤマ トシキ'},
+  {name:'東上里 和広',kana:'ヒガシウエザト カズヒロ'},
+  {name:'東上里加代子',kana:'ヒガシウエザト カヨコ'},
+  {name:'東上里 高聖',kana:'ヒガシウエザト タカキヨ'},
+  {name:'高林 葵',    kana:'タカバヤシ アオイ'},
+  {name:'長濵 菜々美',kana:'ナガハマ ナナミ'},
+  {name:'東上里 汰生',kana:'ヒガシウエザト タイセイ'},
+];
+
+// ===== 静的データ =====
+const BENTOS=[
+  {id:1,name:'日替わり弁当',emoji:'🍱',price:650,daily:true},
+  {id:2,name:'唐揚げ弁当',emoji:'🍗',price:650,daily:false},
+  {id:3,name:'生姜焼き弁当',emoji:'🥩',price:650,daily:false},
+  {id:4,name:'照り焼きチキン弁当',emoji:'🍖',price:650,daily:false},
+];
+const OOMORI=50;
+const ADMIN_PASSWORD='uezato2026';
+
+const MARCH_MENU={
+  2:{main:'手作り白身魚フライ',sides:['麩チャンプルー','鶏と冬瓜の煮物','切り干し大根炊いたん']},
+  3:{main:'油淋鶏',sides:['ナポリタンスパゲティー','素揚げかぼちゃの和風庵','ひじきの煮物']},
+  4:{holiday:'十六日祭',main:null},
+  5:{main:'トンカツ',sides:['回鍋肉','豚バラ大根','ほうれん草の白和え']},
+  6:{main:'ビビンバ丼',sides:['特製ナムル＆焼肉','温泉たまご＆コチュジャン','お漬物']},
+  9:{main:'白身魚のチリマヨソース',sides:['野菜炒め','酢豚風中華団子','クブイリチー']},
+  10:{main:'ヤンニョムチキン',sides:['マカロニポテトサラダ','大根のマヨネーズ和え','かにかま入り春雨サラダ']},
+  11:{main:'酢豚',sides:['鶏と野菜の炊き合わせ','ジャガイモのツナ和え','きんぴらごぼう']},
+  12:{main:'手作りハンバーグ',sides:['青椒肉絲','豚バラ肉じゃが','スパムとほうれん草の炒め物']},
+  13:{main:'ガパオライス',sides:['温泉たまご','彩りパプリカ','チキン唐揚げ']},
+  16:{main:'手作り白身魚フライ',sides:['ゴーヤチャンプルー','鶏と冬瓜の煮物','切り干し大根炊いたん']},
+  17:{main:'チキン唐揚げ（醤油）',sides:['ナポリタンスパゲティー','素揚げかぼちゃの和風庵','ひじきの煮物']},
+  18:{main:'豚バラ生姜焼き',sides:['鶏と野菜の炊き合わせ','ジャーマンポテト','きんぴらごぼう']},
+  19:{main:'照り焼きチキン',sides:['回鍋肉','豚バラ大根','ほうれん草の白和え']},
+  20:{main:null,holiday:'春分の日'},
+  23:{main:'白身魚のカレー風味あん',sides:['麩チャンプルー','酢豚風中華団子','クブイリチー']},
+  24:{main:'チキン南蛮',sides:['マカロニポテトサラダ','大根のマヨネーズ和え','かにかま入り春雨サラダ']},
+  25:{main:'豚バラ味噌炒め',sides:['鶏と野菜の炊き合わせ','ジャガイモのツナ和え','きんぴらごぼう']},
+  26:{main:'トンカツ',sides:['青椒肉絲','豚バラ肉じゃが','スパムとほうれん草の炒め物']},
+  27:{main:'特製ドライカレー',sides:['温泉たまご','素揚げ野菜','チキン唐揚げ']},
+  30:{main:'手作り白身魚フライ',sides:['野菜炒め','鶏と冬瓜の煮物','切り干し大根炊いたん']},
+  31:{main:'油淋鶏',sides:['ナポリタンスパゲティー','素揚げかぼちゃの和風庵','ひじきの煮物']},
+};
+
+// ===== STATE =====
+let orders=[];
+let dailyHistory={};
+let receipts={};
+let menuData={};  // { 'YYYY-MM': { day: { main:'', sides:[], holiday:'' } } }
+let lineGroupUrl='https://line.me/R/ti/g/YyJbDV646D';  // LINEグループURL（デフォルト値）
+let slackWebhookUrl='';  // Slack Webhook URL
+let appPublicUrl='';    // アプリの公開URL（GitHub Pages等）
+let cart=[];           // [{name,bentoId,bentoName,emoji,oomori,price}]
+let selectedName='';
+let selectedBento=null;
+let calDetailVisible=true;
+let receiptPendingDataUrl=null;
+let vendorRefreshTimer=null;
+let adminUnlocked=false;
+let nameDropdownVisible=false;
+
+function loadState(){
+  try{orders=JSON.parse(localStorage.getItem('bento_orders_v5')||'[]');}catch(e){orders=[];}
+  try{dailyHistory=JSON.parse(localStorage.getItem('bento_daily_history')||'{}');}catch(e){dailyHistory={};}
+  try{receipts=JSON.parse(localStorage.getItem('bento_receipts')||'{}');}catch(e){receipts={};}
+  try{menuData=JSON.parse(localStorage.getItem('bento_menu_data')||'{}');}catch(e){menuData={};}
+  lineGroupUrl=localStorage.getItem('bento_line_group_url')||lineGroupUrl;
+  slackWebhookUrl=localStorage.getItem('bento_slack_webhook')||'';
+  appPublicUrl=localStorage.getItem('bento_app_public_url')||'';
+}
+function saveLineGroupUrl(){localStorage.setItem('bento_line_group_url',lineGroupUrl);}
+function saveSlackWebhook(){localStorage.setItem('bento_slack_webhook',slackWebhookUrl);}
+function saveAppPublicUrl(){localStorage.setItem('bento_app_public_url',appPublicUrl);}
+function saveOrders(){localStorage.setItem('bento_orders_v5',JSON.stringify(orders));}
+function saveDailyHistory(){localStorage.setItem('bento_daily_history',JSON.stringify(dailyHistory));}
+function saveReceipts(){localStorage.setItem('bento_receipts',JSON.stringify(receipts));}
+function saveMenuData(){localStorage.setItem('bento_menu_data',JSON.stringify(menuData));}
+
+// ===== UTILS =====
+const now=()=>new Date();
+const pad=n=>String(n).padStart(2,'0');
+const DOW=['日','月','火','水','木','金','土'];
+const dateKey=(d=now())=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const fmtDate=(key)=>{const[y,m,d]=key.split('-');const dt=new Date(+y,+m-1,+d);return`${+m}月${+d}日（${DOW[dt.getDay()]}）`;};
+function isOpen(){
+  const d=now(),h=d.getHours(),m=d.getMinutes();
+  // 13:00〜23:59 または 0:00〜9:19 は注文可能
+  return h>=13 || h<9 || (h===9&&m<20);
+}
+function isClosed(){
+  const d=now(),h=d.getHours(),m=d.getMinutes();
+  // 9:20〜12:59 は受付時間外
+  return (h===9&&m>=20) || (h>=10&&h<=12);
+}
+// 注文対象日を返す（13時以降は翌日分）
+function orderTargetDate(){
+  const d=now();
+  if(d.getHours()>=13){
+    const next=new Date(d);
+    next.setDate(next.getDate()+1);
+    return next;
+  }
+  return d;
+}
+function orderTargetKey(){return dateKey(orderTargetDate());}
+function orderTargetLabel(){
+  const d=orderTargetDate();
+  const today=now();
+  const isNextDay=d.getDate()!==today.getDate();
+  const label=d.toLocaleDateString('ja-JP',{month:'long',day:'numeric',weekday:'short'});
+  return isNextDay?`翌日（${label}）分`:`本日（${label}）分`;
+}
+function fmtCountdown(ms){if(ms<=0)return'00:00';const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000);return h>0?`${h}:${pad(m)}:${pad(s)}`:`${pad(m)}:${pad(s)}`;}
+function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function getMenuForDate(d){
+  const monthKey=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
+  const day=d.getDate();
+  // 登録済みメニューを優先
+  if(menuData[monthKey]&&menuData[monthKey][day]){
+    return menuData[monthKey][day];
+  }
+  // 2026年3月はデフォルトデータ
+  if(d.getFullYear()===2026&&d.getMonth()===2) return MARCH_MENU[day]||null;
+  return null;
+}
+function getTodayMenu(){return getMenuForDate(orderTargetDate());}
+
+// ===== HEADER =====
+function renderHeader(){
+  const d=now();
+  document.getElementById('today-date-hdr').textContent=d.toLocaleDateString('ja-JP',{month:'long',day:'numeric',weekday:'short'});
+  const bar=document.getElementById('status-bar'),dot=document.getElementById('status-dot'),txt=document.getElementById('status-text'),tval=document.getElementById('timer-val');
+  const h=d.getHours(),m=d.getMinutes();
+  if(isClosed()){
+    bar.className='status-bar closed';dot.className='status-dot red';
+    const dl=new Date();dl.setHours(13,0,0,0);
+    txt.textContent='締切済み — 13:00から翌日分受付開始';tval.textContent=fmtCountdown(dl-d);
+  }else if(h<9||(h===9&&m<20)){
+    bar.className='status-bar open';dot.className='status-dot green';
+    const dl=new Date();dl.setHours(9,20,0,0);
+    txt.textContent='受付中 — 締切まで';tval.textContent=fmtCountdown(dl-d);
+  }else{
+    bar.className='status-bar open';dot.className='status-dot green';
+    const target=orderTargetLabel();
+    txt.textContent=`受付中 — ${target}`;tval.textContent='';
+  }
+}
+
+// ===== NAME SEARCH =====
+function onNameInput(){
+  const q=document.getElementById('name-search-input').value.trim();
+  showNameDropdown(q);
+}
+function onNameFocus(){
+  const q=document.getElementById('name-search-input').value.trim();
+  showNameDropdown(q);
+}
+function onNameBlur(){
+  setTimeout(()=>{
+    document.getElementById('name-dropdown').classList.remove('open');
+  },200);
+}
+function showNameDropdown(q){
+  const dd=document.getElementById('name-dropdown');
+  let filtered;
+  if(!q){
+    filtered=EMPLOYEES;
+  }else{
+    const lq=q.toLowerCase().replace(/\s/g,'');
+    filtered=EMPLOYEES.filter(e=>{
+      const nameClean=e.name.replace(/\s/g,'').toLowerCase();
+      const kanaClean=e.kana.replace(/\s/g,'').toLowerCase();
+      // カタカナをひらがなに変換して比較
+      const kanaHira=e.kana.replace(/[\u30A1-\u30F6]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60)).replace(/\s/g,'').toLowerCase();
+      return nameClean.includes(lq)||kanaClean.includes(lq)||kanaHira.includes(lq);
+    });
+    // 入力値がリストにない場合は「直接入力として追加」オプションを表示
+  }
+  if(!filtered.length&&q){
+    dd.innerHTML=`<div class="name-option" onmousedown="selectName('${q.replace(/'/g,"\\'")}')">
+      <span>「${escapeHtml(q)}」を直接入力</span>
+    </div>`;
+  }else{
+    dd.innerHTML=filtered.map(e=>`
+      <div class="name-option" onmousedown="selectName('${e.name.replace(/'/g,"\\'")}')">
+        <span>${e.name}</span>
+        <span class="furigana">${e.kana}</span>
+      </div>`).join('');
+  }
+  dd.classList.add('open');
+}
+function selectName(name){
+  selectedName=name;
+  document.getElementById('name-search-input').value='';
+  document.getElementById('name-dropdown').classList.remove('open');
+  // この月の注文合計を計算
+  const sel=`${now().getFullYear()}-${pad(now().getMonth()+1)}`;
+  const{keys:allKeys,hasCurrentOrders,todayKey}=getMonthKeys(sel);
+  let monthCount=0,monthTotal=0;
+  allKeys.forEach(key=>{
+    const entry=getEntryForKey(key,todayKey,hasCurrentOrders);
+    (entry.orders||[]).forEach(o=>{if(o.name===name){monthCount++;monthTotal+=o.price;}});
+  });
+  // 当日分も加算
+  orders.forEach(o=>{if(o.name===name){monthCount++;monthTotal+=o.price;}});
+  const monthBadge=monthCount>0
+    ?`<span style="font-size:0.7rem;background:rgba(255,255,255,0.25);border-radius:12px;padding:2px 8px;margin-left:6px;">今月 ${monthCount}個 ¥${monthTotal.toLocaleString()}</span>`
+    :`<span style="font-size:0.7rem;background:rgba(255,255,255,0.2);border-radius:12px;padding:2px 8px;margin-left:6px;">今月 注文なし</span>`;
+  document.getElementById('selected-name-display').innerHTML=`
+    <div class="selected-name-badge">
+      👤 ${escapeHtml(name)}${monthBadge}
+      <button class="clear-name" onclick="clearSelectedName()">✕</button>
+    </div>`;
+}
+function clearSelectedName(){
+  selectedName='';
+  document.getElementById('selected-name-display').innerHTML='';
+}
+function clearNameInput(){
+  document.getElementById('name-search-input').value='';
+  document.getElementById('name-dropdown').classList.remove('open');
+}
+
+// ===== TODAY MENU =====
+function renderTodayMenu(){
+  const card=document.getElementById('today-menu-card');
+  const menu=getTodayMenu();
+  const d=orderTargetDate(),dow=DOW[d.getDay()];
+  const label=`🗓 ${d.getMonth()+1}月${d.getDate()}日（${dow}）の日替わり弁当`;
+  if(!menu){card.innerHTML=`<div class="today-menu-label">${label}</div><div class="today-menu-sides" style="color:var(--text-sub)">本日のメニューは未定です</div>`;return;}
+  if(menu.holiday&&!menu.main){card.innerHTML=`<div class="today-menu-label">${label}</div><div class="today-menu-name">🎌 ${menu.holiday}</div><div class="today-menu-sides">お休みです</div>`;return;}
+  card.innerHTML=`<div class="today-menu-label">${label}</div><div class="today-menu-name">${menu.main}</div><div class="today-menu-sides">${(menu.sides||[]).join(' ／ ')}</div>`;
+}
+
+// ===== BENTO LIST =====
+function renderBentoList(){
+  const menu=getTodayMenu();
+  document.getElementById('bento-list').innerHTML=BENTOS.map(b=>{
+    let detail='';
+    if(b.daily){
+      if(menu&&menu.main) detail=`<div class="bento-menu-detail">🍽 ${menu.main}<br><span style="font-size:0.67rem">${(menu.sides||[]).join(' ／ ')}</span></div>`;
+      else if(menu&&menu.holiday) detail=`<div class="bento-menu-detail" style="color:var(--text-sub)">🎌 ${menu.holiday}（お休み）</div>`;
+      else detail=`<div class="bento-menu-detail" style="color:var(--text-sub)">本日のメニューは未定です</div>`;
+    }
+    return `<div class="bento-card" id="card-${b.id}">
+      <div class="bento-top">
+        <div class="bento-num">${b.id}</div>
+        <div><div class="bento-name">${b.emoji} ${b.name}</div><div class="bento-price-tag">通常 ${b.price}円 ／ 大盛り ${b.price+OOMORI}円</div></div>
+      </div>
+      ${detail}
+      <div class="bento-opts">
+        <button class="opt-btn" id="opt-${b.id}-0" onclick="selectOpt(${b.id},false)">普通盛り<span class="opt-sub">${b.price}円</span></button>
+        <button class="opt-btn" id="opt-${b.id}-1" onclick="selectOpt(${b.id},true)">大盛り<span class="opt-sub">${b.price+OOMORI}円</span></button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectOpt(bentoId,oomori){
+  document.querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('.bento-card').forEach(c=>c.classList.remove('selected'));
+  selectedBento={bentoId,oomori};
+  document.getElementById(`opt-${bentoId}-${oomori?1:0}`).classList.add('selected');
+  document.getElementById(`card-${bentoId}`).classList.add('selected');
+}
+
+// ===== CART =====
+function orderAndSubmit(){
+  // 名前チェック
+  if(!selectedName){showToast('⚠️ お名前を選択してください');return;}
+  // 弁当チェック
+  if(!selectedBento){showToast('⚠️ お弁当を選択してください');return;}
+  // 時間チェック
+  if(isClosed()){showToast('⏰ 9:20〜13:00は受付時間外です');return;}
+  // カートに追加
+  const b=BENTOS.find(x=>x.id===selectedBento.bentoId);
+  cart.push({name:selectedName,bentoId:b.id,bentoName:b.name,emoji:b.emoji,oomori:selectedBento.oomori,price:b.price+(selectedBento.oomori?OOMORI:0)});
+  // 即確定
+  const t=now().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+  const targetKey=orderTargetKey();
+  const newOrders=[...cart];
+  newOrders.forEach(c=>{
+    orders.push({...c,time:t,date:targetKey});
+  });
+  saveOrders();updateBadge();
+  // クラウドに保存
+  const lastOrder=orders[orders.length-1];
+  saveOrderToCloud(lastOrder);
+  const name=selectedName;
+  const bentoName=b.name+(selectedBento.oomori?'（大盛り）':'');
+  const targetLabel=orderTargetLabel();
+  showToast(`✅ ${name}：${bentoName}（${targetLabel}）`);
+  // リセット
+  cart=[];renderCart();
+  document.querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('.bento-card').forEach(c=>c.classList.remove('selected'));
+  selectedBento=null;
+  // 名前はそのまま（連続注文しやすいように）
+}
+
+function addToCart(){
+  if(!selectedName){showToast('⚠️ お名前を選択してください');return;}
+  if(!selectedBento){showToast('⚠️ お弁当を選択してください');return;}
+  if(isClosed()){showToast('⏰ 9:20〜13:00は受付時間外です');return;}
+  const b=BENTOS.find(x=>x.id===selectedBento.bentoId);
+  cart.push({name:selectedName,bentoId:b.id,bentoName:b.name,emoji:b.emoji,oomori:selectedBento.oomori,price:b.price+(selectedBento.oomori?OOMORI:0)});
+  // 弁当選択をリセット
+  document.querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('.bento-card').forEach(c=>c.classList.remove('selected'));
+  selectedBento=null;
+  renderCart();
+  showToast(`✅ カートに追加しました`);
+}
+
+function removeFromCart(idx){
+  cart.splice(idx,1);
+  renderCart();
+}
+
+function renderCart(){
+  const area=document.getElementById('cart-area');
+  if(!cart.length){area.innerHTML='';return;}
+  const total=cart.reduce((s,c)=>s+c.price,0);
+  area.innerHTML=`<div class="cart-title">📋 今回の注文（${cart.length}件） 合計 ¥${total.toLocaleString()}</div>`+
+    cart.map((c,i)=>`<div class="cart-item">
+      <div>
+        <div class="cart-item-name">${c.emoji} ${c.bentoName}${c.oomori?'（大盛り）':''}</div>
+        <div class="cart-item-detail">${c.name} ／ ¥${c.price.toLocaleString()}</div>
+      </div>
+      <button class="cart-remove-btn" onclick="removeFromCart(${i})">削除</button>
+    </div>`).join('');
+}
+
+function submitAllOrders(){
+  if(!cart.length){showToast('⚠️ カートが空です');return;}
+  if(isClosed()){showToast('⏰ 9:20〜13:00は受付時間外です');return;}
+  const t=now().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+  cart.forEach(c=>{
+    orders.push({...c,time:t,date:dateKey()});
+  });
+  saveOrders();updateBadge();
+  showToast(`✅ ${cart.length}件の注文を確定しました！`);
+  cart=[];renderCart();
+  clearSelectedName();
+}
+
+// ===== ARCHIVE / RESET =====
+function archiveTodayOrders(){
+  if(!orders.length)return;
+  const key=orderTargetKey();
+  const agg={};let total=0;
+  orders.forEach(o=>{
+    const k=`${o.bentoId}-${o.oomori?1:0}`;
+    if(!agg[k])agg[k]={bentoName:o.bentoName,emoji:o.emoji,oomori:o.oomori,price:o.price,count:0};
+    agg[k].count++;total+=o.price;
+  });
+  const entry={orders:[...orders],total,summary:Object.values(agg),count:orders.length};
+  dailyHistory[key]=entry;
+  saveDailyHistory();
+  // クラウドにも保存
+  saveDailyHistoryToCloud(key, entry);
+}
+function resetDailyOrders(){
+  if(!confirm('本日の注文をリセットしますか？\n（月次集計用に記録は自動保存されます）'))return;
+  archiveTodayOrders();
+  orders=[];saveOrders();cart=[];renderCart();updateBadge();renderSummary();
+  showToast('✅ リセットしました（月次記録に保存済み）');
+}
+
+// ===== SUMMARY =====
+function buildLineMsg(){
+  const d=orderTargetDate();
+  const ds=d.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+  const agg={};let total=0;
+  orders.forEach(o=>{const k=`${o.bentoId}-${o.oomori?1:0}`;if(!agg[k])agg[k]={...o,count:0};agg[k].count++;total+=o.price;});
+  let msg=`平良商店　様\n\nいつもお世話になっております。\n${ds}のお弁当注文をお送りします。\n\n━━━━━━━━━━━━\n`;
+  Object.values(agg).forEach(a=>{msg+=`・${a.bentoName}（${a.oomori?'大盛り':'普通盛り'}）× ${a.count}個\n`;});
+  msg+=`━━━━━━━━━━━━\n合計 ${orders.length}個　¥${total.toLocaleString()}\n\nお手数をおかけしますが、何卒よろしくお願いいたします🙏`;
+  return msg;
+}
+async function renderSummary(){
+  const content=document.getElementById('summary-content');
+  const action=document.getElementById('action-area');
+  // クラウドから最新注文を読み込む
+  const targetKey=orderTargetKey();
+  const cloudOrders=await loadOrdersFromCloud(targetKey);
+  if(cloudOrders.length>0){
+    orders=cloudOrders;
+    saveOrders();
+    updateBadge();
+  }
+  if(!orders.length){content.innerHTML=`<div class="no-orders"><div class="ico">🍱</div>まだ注文がありません</div>`;action.style.display='none';return;}
+  action.style.display='block';
+  const agg={};let total=0;
+  orders.forEach(o=>{const k=`${o.bentoId}-${o.oomori?1:0}`;if(!agg[k])agg[k]={...o,count:0};agg[k].count++;total+=o.price;});
+  const d=orderTargetDate();
+  const rows=Object.values(agg).map(a=>`<div class="sum-row"><span>${a.emoji} ${a.bentoName}（${a.oomori?'大盛り':'普通盛り'}）</span><span class="sum-count">${a.count}個</span></div>`).join('');
+  const pRows=orders.map(o=>`<div class="person-row"><span class="person-name">${o.name}</span><span class="person-detail">${o.bentoName}（${o.oomori?'大盛り':'普通盛り'}）<br>¥${o.price} ${o.time}</span></div>`).join('');
+  content.innerHTML=`
+    <div class="summary-card">
+      <div class="summary-heading">📊 ${d.toLocaleDateString('ja-JP',{month:'long',day:'numeric',weekday:'short'})}　計${orders.length}個</div>
+      ${rows}
+      <div class="total-band"><span>合計金額</span><span class="total-num">¥${total.toLocaleString()}</span></div>
+    </div>
+    <div class="line-preview-card">
+      <div class="line-preview-label">📤 LINEで送信される内容（平良商店へ）</div>
+      <pre class="line-preview-body">${escapeHtml(buildLineMsg())}</pre>
+      <div class="line-preview-note">※ 注文者名は送信されません</div>
+    </div>
+    <div class="person-card">
+      <div class="person-heading">👥 社内確認用　注文者一覧</div>
+      ${pRows}
+    </div>`;
+}
+function sendToLine(){
+  if(!orders.length){showToast('注文がありません');return;}
+  const msg=buildLineMsg();
+  // Slackに同時送信（設定済みの場合）
+  sendToSlack(msg);
+  // LINE URL方式で送信（メッセージが入力済み状態で開く）
+  window.open('https://line.me/R/msg/text/?'+encodeURIComponent(msg),'_blank');
+}
+
+function copyToClipboard(text){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).catch(()=>fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text){
+  const ta=document.createElement('textarea');
+  ta.value=text;
+  ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);
+  ta.focus();ta.select();
+  try{document.execCommand('copy');}catch(e){}
+  document.body.removeChild(ta);
+}
+
+// ===== RECEIPT =====
+function initReceiptDateSelects(){
+  const mSel=document.getElementById('receipt-month');
+  const d=now();
+  mSel.innerHTML='';
+  for(let i=-1;i<=1;i++){
+    const dt=new Date(d.getFullYear(),d.getMonth()+i,1);
+    const val=`${dt.getFullYear()}-${pad(dt.getMonth()+1)}`;
+    const opt=document.createElement('option');
+    opt.value=val;opt.textContent=`${dt.getFullYear()}年${dt.getMonth()+1}月`;
+    if(i===0)opt.selected=true;
+    mSel.appendChild(opt);
+  }
+  updateDaySelect();
+  mSel.onchange=updateDaySelect;
+}
+function updateDaySelect(){
+  const[y,m]=document.getElementById('receipt-month').value.split('-').map(Number);
+  const days=new Date(y,m,0).getDate();
+  const dSel=document.getElementById('receipt-day');
+  const prev=+dSel.value||now().getDate();
+  dSel.innerHTML='';
+  for(let i=1;i<=days;i++){
+    const opt=document.createElement('option');
+    opt.value=pad(i);opt.textContent=`${i}日`;
+    if(i===Math.min(prev,days))opt.selected=true;
+    dSel.appendChild(opt);
+  }
+}
+function getSelectedReceiptDate(){
+  return`${document.getElementById('receipt-month').value}-${document.getElementById('receipt-day').value}`;
+}
+document.getElementById('receipt-file-input').addEventListener('change',function(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    receiptPendingDataUrl=ev.target.result;
+    document.getElementById('receipt-preview-img').src=receiptPendingDataUrl;
+    document.getElementById('receipt-preview').style.display='block';
+  };
+  reader.readAsDataURL(file);
+});
+async function saveReceipt(){
+  if(!receiptPendingDataUrl){showToast('⚠️ 写真を選択してください');return;}
+  const key=getSelectedReceiptDate();
+  showToast('⏳ 領収書を保存中...');
+  // クラウドに保存
+  const ok=await saveReceiptToCloud(key, receiptPendingDataUrl);
+  // ローカルにも保存
+  receipts[key]={dataUrl:receiptPendingDataUrl,savedAt:now().toLocaleString('ja-JP')};
+  saveReceipts();
+  receiptPendingDataUrl=null;
+  document.getElementById('receipt-preview').style.display='none';
+  document.getElementById('receipt-preview-img').src='';
+  document.getElementById('receipt-file-input').value='';
+  showToast(ok?`✅ ${fmtDate(key)}の領収書を保存しました`:`✅ ${fmtDate(key)}の領収書をローカルに保存しました`);
+  renderReceiptList();
+}
+async function renderReceiptList(){
+  const list=document.getElementById('receipt-list');
+  list.innerHTML=`<div style="text-align:center;padding:16px;color:var(--text-sub);font-size:0.82rem;">⏳ 読み込み中...</div>`;
+  // クラウドから読み込み
+  const cloudReceipts=await loadReceiptsFromCloud();
+  if(Object.keys(cloudReceipts).length>0){
+    Object.assign(receipts,cloudReceipts);
+    saveReceipts();
+  }
+  const keys=Object.keys(receipts).sort().reverse();
+  if(!keys.length){list.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text-sub);font-size:0.84rem">保存された領収書はありません</div>`;return;}
+  list.innerHTML=keys.map(key=>`<div class="receipt-item">
+    <img class="receipt-thumb" src="${receipts[key].dataUrl}" alt="領収書" onclick="openModal('${key}')">
+    <div class="receipt-info">
+      <div class="receipt-item-date">${fmtDate(key)}</div>
+      <div class="receipt-item-status">保存：${receipts[key].savedAt}</div>
+    </div>
+    <button class="receipt-delete-btn" onclick="deleteReceipt('${key}')">削除</button>
+  </div>`).join('');
+}
+async function deleteReceipt(key){
+  if(!confirm(`${fmtDate(key)}の領収書を削除しますか？`))return;
+  await deleteReceiptFromCloud(key);
+  delete receipts[key];saveReceipts();renderReceiptList();
+  showToast('🗑️ 削除しました');
+}
+function openModal(key){
+  const r=receipts[key];if(!r)return;
+  document.getElementById('modal-img').src=r.dataUrl;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+function closeModal(){document.getElementById('modal-overlay').classList.add('hidden');}
+
+// ===== CALENDAR =====
+function renderCalendar(){
+  const grid=document.getElementById('cal-grid');
+  // 表示する年月（デフォルト：注文対象月）
+  const targetD=orderTargetDate();
+  const year=calYear||targetD.getFullYear();
+  const month=calMonth!==undefined?calMonth:targetD.getMonth();
+  const firstDow=new Date(year,month,1).getDay();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const prevLast=new Date(year,month,0).getDate();
+  const todayD=(now().getFullYear()===year&&now().getMonth()===month)?now().getDate():-1;
+  const monthKey=`${year}-${pad(month+1)}`;
+  document.getElementById('cal-title-text').textContent=`📅 ${year}年${month+1}月 日替わりカレンダー`;
+  let html=DOW.map(d=>`<div class="cal-dayname">${d}</div>`).join('');
+  for(let i=0;i<firstDow;i++)html+=`<div class="cal-cell other-month"><span class="cal-num">${prevLast-firstDow+1+i}</span></div>`;
+  for(let d=1;d<=daysInMonth;d++){
+    const dow=(firstDow+d-1)%7;
+    const menu=getMenuForDate(new Date(year,month,d));
+    const isToday=d===todayD;
+    let cls='cal-cell';
+    if(dow===0||(menu?.holiday))cls+=' sunday';else if(dow===6)cls+=' saturday';
+    if(isToday)cls+=' today';
+    let inner=`<span class="cal-num">${d}</span>`;
+    if(menu?.holiday&&!menu?.main)inner+=`<div class="cal-holiday-label">${menu.holiday}</div>`;
+    else if(menu?.main){inner+=`<div class="cal-menu-main">${menu.main}</div>`;if(calDetailVisible&&menu.sides)inner+=`<div class="cal-menu-sub">${menu.sides.slice(0,2).join('・')}</div>`;}
+    html+=`<div class="${cls}">${inner}</div>`;
+  }
+  const rem=(7-(firstDow+daysInMonth)%7)%7;
+  for(let i=1;i<=rem;i++)html+=`<div class="cal-cell other-month"><span class="cal-num">${i}</span></div>`;
+  grid.innerHTML=html;
+}
+let calYear=null,calMonth=undefined;
+function calPrev(){
+  if(calMonth===undefined){const d=orderTargetDate();calYear=d.getFullYear();calMonth=d.getMonth();}
+  calMonth--;if(calMonth<0){calMonth=11;calYear--;}
+  renderCalendar();
+}
+function calNext(){
+  if(calMonth===undefined){const d=orderTargetDate();calYear=d.getFullYear();calMonth=d.getMonth();}
+  calMonth++;if(calMonth>11){calMonth=0;calYear++;}
+  renderCalendar();
+}
+function toggleCalDetail(){calDetailVisible=!calDetailVisible;document.getElementById('cal-toggle-btn').textContent=calDetailVisible?'副菜を隠す':'副菜を表示';renderCalendar();}
+
+// ===== MONTHLY =====
+function initMonthlySelect(){
+  ['monthly-month-select','admin-month-select'].forEach(id=>{
+    const sel=document.getElementById(id);if(!sel)return;
+    sel.innerHTML='';
+    const d=now();
+    for(let i=0;i<=5;i++){
+      const dt=new Date(d.getFullYear(),d.getMonth()-i,1);
+      const val=`${dt.getFullYear()}-${pad(dt.getMonth()+1)}`;
+      const opt=document.createElement('option');
+      opt.value=val;opt.textContent=`${dt.getFullYear()}年${dt.getMonth()+1}月`;
+      if(i===0)opt.selected=true;
+      sel.appendChild(opt);
+    }
+  });
+}
+function getMonthKeys(sel){
+  const keys=Object.keys(dailyHistory).filter(k=>k.startsWith(sel)).sort();
+  const todayKey=dateKey();
+  const hasCurrentOrders=todayKey.startsWith(sel)&&orders.length>0&&!dailyHistory[todayKey];
+  return{keys:[...new Set([...keys,...(hasCurrentOrders?[todayKey]:[])])].sort(),hasCurrentOrders,todayKey};
+}
+function getEntryForKey(key,todayKey,hasCurrentOrders){
+  if(key===todayKey&&hasCurrentOrders){
+    const agg={};let total=0;
+    orders.forEach(o=>{const k=`${o.bentoId}-${o.oomori?1:0}`;if(!agg[k])agg[k]={...o,count:0};agg[k].count++;total+=o.price;});
+    return{summary:Object.values(agg),total,count:orders.length,orders:[...orders]};
+  }
+  return dailyHistory[key];
+}
+
+async function renderMonthly(){
+  const sel=document.getElementById('monthly-month-select').value;
+  const[y,m]=sel.split('-').map(Number);
+  const content=document.getElementById('monthly-content');
+  const action=document.getElementById('monthly-action');
+  content.innerHTML=`<div style="text-align:center;padding:24px;color:var(--text-sub);">⏳ クラウドから読み込み中...</div>`;
+  // クラウドから月次データと領収書を並行取得
+  const[cloudHistory,cloudReceipts]=await Promise.all([
+    loadDailyHistoryFromCloud(sel),
+    loadReceiptsFromCloud()
+  ]);
+  if(Object.keys(cloudHistory).length>0){
+    Object.assign(dailyHistory,cloudHistory);
+    saveDailyHistory();
+  }
+  if(Object.keys(cloudReceipts).length>0){
+    Object.assign(receipts,cloudReceipts);
+    saveReceipts();
+  }
+  const{keys:allKeys,hasCurrentOrders,todayKey}=getMonthKeys(sel);
+  if(!allKeys.length){content.innerHTML=`<div class="no-monthly">この月の記録はまだありません</div>`;action.style.display='none';return;}
+  action.style.display='block';
+  let grandTotal=0,grandCount=0;
+  const rows=allKeys.map(key=>{
+    const entry=getEntryForKey(key,todayKey,hasCurrentOrders);
+    grandTotal+=entry.total;grandCount+=entry.count;
+    const receipt=receipts[key];
+    const entryOrders=entry.orders||[];
+    const byBento={};
+    entryOrders.forEach(o=>{
+      const k=`${o.bentoId}-${o.oomori?1:0}`;
+      if(!byBento[k])byBento[k]={label:`${o.emoji}${o.bentoName}${o.oomori?'（大盛り）':''}`,names:[]};
+      byBento[k].names.push(o.name);
+    });
+    const nameRows=Object.values(byBento).map(b=>`<div style="font-size:0.73rem;color:var(--text-sub);margin-top:3px;"><span style="font-weight:700;color:var(--text);">${b.label}</span>　${b.names.join('・')}</div>`).join('');
+    const receiptHtml=receipt
+      ?`<div style="margin-top:8px;display:flex;align-items:center;gap:8px;"><img src="${receipt.dataUrl}" style="width:44px;height:44px;border-radius:6px;object-fit:cover;cursor:pointer;border:1px solid var(--border);" onclick="openModal('${key}')"><span style="font-size:0.7rem;color:var(--accent2);font-weight:700;">✅ 領収書あり</span></div>`
+      :`<div style="margin-top:6px;font-size:0.7rem;color:#ccc;">📄 領収書未登録</div>`;
+    return`<div style="border-bottom:2px solid var(--border);padding:10px 0 8px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+        <span style="font-family:'Kaisei Decol',serif;font-weight:700;font-size:0.92rem;">${fmtDate(key)}</span>
+        <span style="font-family:'Kaisei Decol',serif;font-weight:700;color:var(--primary);font-size:0.9rem;">¥${entry.total.toLocaleString()} <span style="font-size:0.68rem;font-weight:400;color:var(--text-sub);">${entry.count}個</span></span>
+      </div>
+      ${nameRows}${receiptHtml}
+    </div>`;
+  }).join('');
+  const monthlyLineMsg=buildMonthlyLineMsg(sel,allKeys,grandTotal,grandCount,todayKey,hasCurrentOrders);
+  content.innerHTML=`${rows}
+    <div class="monthly-total-row"><span>月合計（${grandCount}個）</span><span class="monthly-total-num">¥${grandTotal.toLocaleString()}</span></div>
+    <div style="margin-top:14px">
+      <div class="line-preview-label" style="font-size:0.73rem;font-weight:700;color:var(--accent2);margin-bottom:8px;">📤 LINEで送信される内容（名前なし）</div>
+      <pre class="line-preview-body">${escapeHtml(monthlyLineMsg)}</pre>
+    </div>`;
+}
+
+function buildMonthlyLineMsg(sel,keys,grandTotal,grandCount,todayKey,hasCurrentOrders){
+  const[y,m]=sel.split('-').map(Number);
+  const todayStr=now().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'});
+  const receiptCount=keys.filter(k=>receipts[k]).length;
+  let msg=`平良商店　様\n\nいつも大変お世話になっております。\n${todayStr}付にて、${y}年${m}月分のお弁当代金の月次集計をご報告申し上げます。\n\n━━━━━━━━━━━━\n`;
+  keys.forEach(key=>{
+    const entry=getEntryForKey(key,todayKey||dateKey(),hasCurrentOrders||false);
+    const[,mm,dd]=key.split('-');
+    const dt=new Date(+y,+mm-1,+dd);
+    const hasR=receipts[key]?'✅':'　';
+    msg+=`${hasR} ${+mm}/${+dd}（${DOW[dt.getDay()]}） `;
+    msg+=entry.summary.map(s=>`${s.bentoName}${s.oomori?'大盛':''}×${s.count}`).join('、');
+    msg+=` ¥${entry.total.toLocaleString()}\n`;
+  });
+  msg+=`━━━━━━━━━━━━\n月合計 ${grandCount}個　¥${grandTotal.toLocaleString()}\n`;
+  if(receiptCount>0)msg+=`\n※ 領収書（${receiptCount}枚）は別途ご確認いただけます。\n`;
+  msg+=`\n今月も美味しいお弁当をありがとうございました。\n来月もどうぞよろしくお願いいたします🙏`;
+  if(appPublicUrl){
+    msg+=`\n\n📋 月次集計・領収書のご確認はこちら：\n${appPublicUrl}`;
+  } else {
+    msg+=`\n\n📋 領収書は担当者よりお渡しいたします。`;
+  }
+  return msg;
+}
+
+function testSendMonthlyLine(){
+  const sel=document.getElementById('monthly-month-select').value;
+  const{keys:allKeys,hasCurrentOrders,todayKey}=getMonthKeys(sel);
+  if(!allKeys.length){showToast('この月の記録がありません');return;}
+  let grandTotal=0,grandCount=0;
+  allKeys.forEach(key=>{const e=getEntryForKey(key,todayKey,hasCurrentOrders);grandTotal+=e.total;grandCount+=e.count;});
+  const msg=buildMonthlyLineMsg(sel,allKeys,grandTotal,grandCount,todayKey,hasCurrentOrders);
+  alert('【テスト送信 - 送信内容プレビュー】\n\n'+msg+'\n\n※ OKを押すとLINEが開きます（テスト送信）');
+  window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msg)}`,'_blank');
+}
+
+function sendMonthlyToLine(){
+  // 月次メッセージをSlackに送信
+  const sel=document.getElementById('monthly-month-select').value;
+  const{keys:allKeys,hasCurrentOrders,todayKey}=getMonthKeys(sel);
+  if(allKeys.length){
+    let grandTotal=0,grandCount=0;
+    allKeys.forEach(key=>{const e=getEntryForKey(key,todayKey,hasCurrentOrders);grandTotal+=e.total;grandCount+=e.count;});
+    const msg=buildMonthlyLineMsg(sel,allKeys,grandTotal,grandCount,todayKey,hasCurrentOrders);
+    sendToSlack(msg);
+  }
+  openVendorPage();
+  setTimeout(()=>showToast('このページをLINEで平良商店さんに共有してください'),600);
+}
+
+// ===== VENDOR VIEW =====
+let currentVendorSel='';
+async function openVendorPage(){
+  currentVendorSel=document.getElementById('monthly-month-select').value;
+  // 最新の領収書をクラウドから取得
+  const cloudReceipts=await loadReceiptsFromCloud();
+  if(Object.keys(cloudReceipts).length>0){
+    Object.assign(receipts,cloudReceipts);
+    saveReceipts();
+  }
+  renderVendorView(currentVendorSel);
+  document.getElementById('vendor-view').style.display='block';
+  document.body.style.overflow='hidden';
+  document.getElementById('vendor-view').scrollTop=0;
+  vendorRefreshTimer=setInterval(()=>{loadState();renderVendorView(currentVendorSel);},30000);
+}
+function closeVendorView(){
+  document.getElementById('vendor-view').style.display='none';
+  document.body.style.overflow='';
+  if(vendorRefreshTimer){clearInterval(vendorRefreshTimer);vendorRefreshTimer=null;}
+}
+function vendorManualRefresh(){loadState();renderVendorView(currentVendorSel);showToast('🔄 最新データに更新しました');}
+function vendorOpenImg(key){const r=receipts[key];if(!r)return;document.getElementById('modal-img').src=r.dataUrl;document.getElementById('modal-overlay').classList.remove('hidden');}
+
+function renderVendorView(sel){
+  const[y,m]=sel.split('-').map(Number);
+  const{keys:allKeys,hasCurrentOrders,todayKey}=getMonthKeys(sel);
+  const todayStr=now().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('vendor-header-sub').textContent=`${y}年${m}月分　／　${todayStr}現在`;
+  const updEl=document.getElementById('vendor-last-updated');
+  if(updEl)updEl.textContent=`最終更新：${now().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
+  if(!allKeys.length){document.getElementById('vendor-content').innerHTML=`<div style="text-align:center;padding:40px;color:#7A6A5A;">この月のデータがありません</div>`;return;}
+  let grandTotal=0,grandCount=0;
+  const rows=allKeys.map(key=>{
+    const entry=getEntryForKey(key,todayKey,hasCurrentOrders);
+    grandTotal+=entry.total;grandCount+=entry.count;
+    const receipt=receipts[key];
+    const summaryHtml=entry.summary.map(s=>
+      s.oomori
+        ?`<span style="display:inline-block;background:#E8F0FC;border-radius:6px;padding:2px 8px;font-size:0.75rem;margin:2px 2px 0 0;color:#1A5CB8;font-weight:700;border:1px solid #B8CFF0;">⬆️${s.emoji}${s.bentoName}【大盛り】×${s.count}</span>`
+        :`<span style="display:inline-block;background:#FFF0E8;border-radius:6px;padding:2px 8px;font-size:0.75rem;margin:2px 2px 0 0;color:#C8401A;font-weight:700;">${s.emoji}${s.bentoName}×${s.count}</span>`
+    ).join('');
+    const receiptSection=receipt
+      ?`<div style="margin-top:10px;"><div style="font-size:0.7rem;font-weight:700;color:#2D6A4F;margin-bottom:5px;">📄 領収書</div><img src="${receipt.dataUrl}" style="width:100%;max-height:220px;object-fit:contain;border-radius:10px;border:1px solid #EDE0D0;cursor:pointer;" onclick="vendorOpenImg('${key}')" alt="領収書"></div>`
+      :`<div style="margin-top:8px;font-size:0.7rem;color:#ccc;">📄 領収書未登録</div>`;
+    return`<div style="background:white;border-radius:14px;padding:14px 15px;margin-bottom:10px;box-shadow:0 2px 10px rgba(0,0,0,0.07);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-family:'Kaisei Decol',serif;font-weight:700;font-size:0.95rem;">${fmtDate(key)}</span>
+        <span style="font-family:'Kaisei Decol',serif;font-weight:700;color:#C8401A;font-size:1rem;">¥${entry.total.toLocaleString()} <span style="font-size:0.72rem;color:#7A6A5A;font-weight:400;">${entry.count}個</span></span>
+      </div>
+      <div>${summaryHtml}</div>${receiptSection}
+    </div>`;
+  }).join('');
+  const totalHtml=`<div style="background:linear-gradient(135deg,#2D6A4F,#3D8A6F);color:white;border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;"><span style="font-weight:700;">月合計（${grandCount}個）</span><span style="font-family:'Kaisei Decol',serif;font-size:1.2rem;font-weight:700;">¥${grandTotal.toLocaleString()}</span></div>`;
+  const receiptCount=allKeys.filter(k=>receipts[k]).length;
+  let vendorMsg=`平良商店　様\n\nいつも大変お世話になっております。\n${todayStr}付にて、${y}年${m}月分のお弁当代金の月次集計をご確認いただけますと幸いです。\n\n月合計：${grandCount}個　¥${grandTotal.toLocaleString()}`;
+  if(receiptCount>0)vendorMsg+=`\n\n領収書（${receiptCount}枚）は上記の各日付欄にてご確認いただけます。`;
+  vendorMsg+=`\n\n今月も大変美味しいお弁当をありがとうございました。\n来月もどうぞよろしくお願いいたします🙏`;
+  document.getElementById('vendor-content').innerHTML=rows+totalHtml;
+  document.getElementById('vendor-message').textContent=vendorMsg;
+}
+
+// ===== HISTORY =====
+function renderHistory(){
+  const container=document.getElementById('history-content');
+  if(!orders.length){
+    container.innerHTML=`<div style="text-align:center;padding:24px;color:var(--text-sub);font-size:0.86rem;">本日の注文はありません</div>`;
+    return;
+  }
+  const targetDateStr=orderTargetDate().toLocaleDateString('ja-JP',{month:'long',day:'numeric',weekday:'short'});
+  container.innerHTML=`
+    <div style="font-size:0.78rem;color:var(--text-sub);margin-bottom:12px;">📅 ${targetDateStr}の注文一覧（${orders.length}件）</div>`+
+    orders.map((o,i)=>`
+    <div id="history-row-${i}" style="background:#FAFAFA;border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:0.9rem;">${o.name}</div>
+          <div style="font-size:0.8rem;color:var(--text-sub);margin-top:2px;">
+            ${o.emoji} ${o.bentoName}（${o.oomori?'大盛り':'普通盛り'}）　¥${o.price.toLocaleString()}
+          </div>
+          <div style="font-size:0.7rem;color:#aaa;margin-top:2px;">注文時刻：${o.time}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
+          <button onclick="editOrder(${i})" style="padding:5px 12px;background:var(--blue);color:white;border:none;border-radius:8px;font-size:0.73rem;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;min-height:32px;">✏️ 編集</button>
+          <button onclick="cancelOrder(${i})" style="padding:5px 12px;background:white;color:var(--primary);border:2px solid var(--primary);border-radius:8px;font-size:0.73rem;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;min-height:32px;">🗑️ 取消</button>
+        </div>
+      </div>
+    </div>`).join('')+`
+    <div style="background:linear-gradient(135deg,var(--primary),var(--primary-light));color:white;border-radius:10px;padding:11px 14px;display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+      <span style="font-weight:700;font-size:0.88rem;">合計</span>
+      <span style="font-family:'Kaisei Decol',serif;font-size:1.1rem;font-weight:700;">
+        ${orders.length}個　¥${orders.reduce((s,o)=>s+o.price,0).toLocaleString()}
+      </span>
+    </div>`;
+}
+
+function cancelOrder(idx){
+  const o=orders[idx];
+  // インライン確認UIを表示
+  const rowId='cancel-confirm-'+idx;
+  const existing=document.getElementById(rowId);
+  if(existing){existing.remove();return;}
+  const parentRow=document.getElementById('history-row-'+idx);
+  if(!parentRow)return;
+  const confirmDiv=document.createElement('div');
+  confirmDiv.id=rowId;
+  confirmDiv.style.cssText='background:#FFF0EE;border:2px solid var(--primary);border-radius:10px;padding:10px 12px;margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:8px;';
+  confirmDiv.innerHTML=`
+    <span style="font-size:0.8rem;font-weight:700;color:var(--primary);">本当に取消しますか？</span>
+    <div style="display:flex;gap:6px;">
+      <button onclick="confirmCancel(${idx})" style="padding:7px 14px;background:var(--primary);color:white;border:none;border-radius:8px;font-family:'Noto Sans JP',sans-serif;font-size:0.8rem;font-weight:700;cursor:pointer;min-height:36px;">取消する</button>
+      <button onclick="document.getElementById('${rowId}').remove()" style="padding:7px 14px;background:white;color:var(--text-sub);border:2px solid var(--border);border-radius:8px;font-family:'Noto Sans JP',sans-serif;font-size:0.8rem;font-weight:700;cursor:pointer;min-height:36px;">戻る</button>
+    </div>`;
+  parentRow.appendChild(confirmDiv);
+}
+
+function confirmCancel(idx){
+  const o=orders[idx];
+  // クラウドからも削除
+  if(o.cloud_id) deleteOrderFromCloud(o.cloud_id);
+  orders.splice(idx,1);
+  saveOrders();updateBadge();renderHistory();renderSummary();
+  showToast('🗑️ 注文を取消しました');
+}
+
+function editOrder(idx){
+  const o=orders[idx];
+  // 編集モーダルを表示
+  const modal=document.createElement('div');
+  modal.id='edit-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:800;display:flex;align-items:flex-end;justify-content:center;padding:0;';
+  modal.innerHTML=`
+    <div style="background:white;border-radius:20px 20px 0 0;padding:24px 18px calc(24px + env(safe-area-inset-bottom));width:100%;max-width:720px;max-height:85vh;overflow-y:auto;">
+      <div style="font-family:'Kaisei Decol',serif;font-size:1rem;font-weight:700;margin-bottom:4px;">✏️ 注文を編集</div>
+      <div style="font-size:0.8rem;color:var(--text-sub);margin-bottom:16px;">${o.name}さんの注文を変更します</div>
+      <div style="font-size:0.78rem;font-weight:700;color:var(--text-sub);margin-bottom:8px;">🍱 弁当を選択</div>
+      ${BENTOS.map(b=>`
+        <div style="margin-bottom:8px;">
+          <div style="font-size:0.85rem;font-weight:700;margin-bottom:5px;">${b.emoji} ${b.name}</div>
+          <div style="display:flex;gap:7px;">
+            <button onclick="applyEdit(${idx},${b.id},false)" style="flex:1;padding:9px;border:2px solid ${o.bentoId===b.id&&!o.oomori?'var(--primary)':'var(--border)'};background:${o.bentoId===b.id&&!o.oomori?'var(--primary)':'white'};color:${o.bentoId===b.id&&!o.oomori?'white':'var(--text-sub)'};border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;min-height:44px;">普通盛り<br><span style="font-size:0.68rem;font-weight:400;">${b.price}円</span></button>
+            <button onclick="applyEdit(${idx},${b.id},true)" style="flex:1;padding:9px;border:2px solid ${o.bentoId===b.id&&o.oomori?'var(--primary)':'var(--border)'};background:${o.bentoId===b.id&&o.oomori?'var(--primary)':'white'};color:${o.bentoId===b.id&&o.oomori?'white':'var(--text-sub)'};border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;min-height:44px;">大盛り<br><span style="font-size:0.68rem;font-weight:400;">${b.price+OOMORI}円</span></button>
+          </div>
+        </div>`).join('')}
+      <button onclick="closeEditModal()" style="width:100%;margin-top:10px;padding:12px;border:2px solid var(--border);background:none;border-radius:12px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;color:var(--text-sub);cursor:pointer;min-height:44px;">キャンセル</button>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function applyEdit(idx,bentoId,oomori){
+  const b=BENTOS.find(x=>x.id===bentoId);
+  orders[idx].bentoId=b.id;
+  orders[idx].bentoName=b.name;
+  orders[idx].emoji=b.emoji;
+  orders[idx].oomori=oomori;
+  orders[idx].price=b.price+(oomori?OOMORI:0);
+  saveOrders();
+  closeEditModal();
+  renderHistory();renderSummary();
+  showToast(`✅ ${orders[idx].name}さんの注文を変更しました`);
+}
+
+function closeEditModal(){
+  const m=document.getElementById('edit-modal');
+  if(m)m.remove();
+}
+
+// ===== SLACK NOTIFICATION =====
+async function sendToSlack(msg){
+  if(!slackWebhookUrl)return;
+  try{
+    await fetch(slackWebhookUrl,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({text:msg})
+    });
+    showToast('✅ Slackにも送信しました');
+  }catch(e){
+    console.error('Slack送信エラー:',e);
+    showToast('⚠️ Slack送信に失敗しました');
+  }
+}
+
+// ===== LINE GROUP URL =====
+function initAppPublicUrlInput(){
+  const input=document.getElementById('app-public-url-input');
+  if(input) input.value=appPublicUrl;
+  updateAppUrlStatus();
+}
+
+function saveAppPublicUrlSetting(){
+  const val=document.getElementById('app-public-url-input').value.trim();
+  appPublicUrl=val;
+  saveAppPublicUrl();
+  updateAppUrlStatus();
+  showToast(val?'✅ アプリURLを保存しました':'クリアしました');
+}
+
+function clearAppPublicUrl(){
+  appPublicUrl='';
+  document.getElementById('app-public-url-input').value='';
+  saveAppPublicUrl();
+  updateAppUrlStatus();
+  showToast('🗑️ アプリURLをクリアしました');
+}
+
+function updateAppUrlStatus(){
+  const el=document.getElementById('app-url-status');
+  if(!el)return;
+  if(appPublicUrl){
+    el.innerHTML=`<span style="color:#B87800;font-weight:700;">✅ URL設定済み — 月次LINEメッセージに自動追加されます</span>`;
+  }else{
+    el.innerHTML=`<span style="color:var(--text-sub);">未設定 — GitHub Pages公開後に設定してください</span>`;
+  }
+}
+
+function initSlackWebhookInput(){
+  const input=document.getElementById('slack-webhook-input');
+  if(input) input.value=slackWebhookUrl;
+  updateSlackStatus();
+}
+
+function saveSlackWebhookSetting(){
+  const val=document.getElementById('slack-webhook-input').value.trim();
+  slackWebhookUrl=val;
+  saveSlackWebhook();
+  updateSlackStatus();
+  showToast(val?'✅ Slack Webhook URLを保存しました':'クリアしました');
+}
+
+function clearSlackWebhook(){
+  slackWebhookUrl='';
+  document.getElementById('slack-webhook-input').value='';
+  saveSlackWebhook();
+  updateSlackStatus();
+  showToast('🗑️ Slack Webhook URLをクリアしました');
+}
+
+async function testSlackWebhook(){
+  const val=document.getElementById('slack-webhook-input').value.trim();
+  if(!val){showToast('⚠️ Webhook URLを入力してください');return;}
+  const testMsg=`🧪 テスト送信
+平良商店お弁当注文アプリからの接続テストです。
+送信時刻：${now().toLocaleString('ja-JP')}`;
+  slackWebhookUrl=val;
+  await sendToSlack(testMsg);
+}
+
+function updateSlackStatus(){
+  const el=document.getElementById('slack-status');
+  if(!el)return;
+  if(slackWebhookUrl){
+    el.innerHTML=`<span style="color:#6B3FA0;font-weight:700;">✅ Webhook設定済み — LINEと同時に自動送信されます</span>`;
+  } else {
+    el.innerHTML=`<span style="color:var(--text-sub);">未設定</span>`;
+  }
+}
+
+function initLineGroupUrlInput(){
+  const input=document.getElementById('line-group-url-input');
+  if(input) input.value=lineGroupUrl;
+  updateLineGroupStatus();
+}
+
+function normalizeLineUrl(url){
+  if(!url)return '';
+  url=url.trim();
+  // https://line.me/ti/g/XXX → https://line.me/R/ti/g/XXX
+  if(url.indexOf('line.me/ti/')!==-1){
+    url=url.replace('line.me/ti/','line.me/R/ti/');
+  }
+  return url;
+}
+
+function saveLineGroupUrlSetting(){
+  const raw=document.getElementById('line-group-url-input').value.trim();
+  const val=normalizeLineUrl(raw);
+  document.getElementById('line-group-url-input').value=val;
+  lineGroupUrl=val;
+  saveLineGroupUrl();
+  updateLineGroupStatus();
+  showToast(val?'✅ LINEグループURLを保存しました':'LINEグループURLをクリアしました');
+}
+
+function clearLineGroupUrl(){
+  lineGroupUrl='';
+  document.getElementById('line-group-url-input').value='';
+  saveLineGroupUrl();
+  updateLineGroupStatus();
+  showToast('🗑️ LINEグループURLをクリアしました');
+}
+
+function updateLineGroupStatus(){
+  const el=document.getElementById('line-group-status');
+  if(!el)return;
+  if(lineGroupUrl){
+    el.innerHTML=`<span style="color:var(--accent2);font-weight:700;">✅ グループURL設定済み — 注文時に自動コピー＆グループが開きます</span>`;
+  } else {
+    el.innerHTML=`<span style="color:var(--text-sub);">未設定 — 設定するとワンタップで送信できます</span>`;
+  }
+}
+
+// ===== AI CALENDAR READER =====
+let aiCalendarImageBase64='';
+let aiParsedMenuData={};
+
+// ファイル選択ハンドラ
+document.addEventListener('DOMContentLoaded',()=>{
+  const input=document.getElementById('ai-calendar-input');
+  if(input) input.addEventListener('change',onAiFileSelected);
+});
+
+function onAiFileSelected(e){
+  const file=e.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const base64=ev.target.result;
+    aiCalendarImageBase64=base64;
+    // プレビュー表示
+    if(file.type.startsWith('image/')){
+      document.getElementById('ai-preview-img').src=base64;
+      document.getElementById('ai-preview-area').style.display='block';
+    } else {
+      document.getElementById('ai-preview-area').style.display='none';
+    }
+    // 年月セレクト表示
+    initAiYearMonthSelect();
+    document.getElementById('ai-year-month-select').style.display='block';
+    document.getElementById('ai-read-btn').style.display='block';
+    document.getElementById('ai-result-area').style.display='none';
+    document.getElementById('ai-status').style.display='none';
+    document.getElementById('ai-upload-area').style.borderColor='var(--blue)';
+  };
+  reader.readAsDataURL(file);
+}
+
+function initAiYearMonthSelect(){
+  const d=now();
+  const ysel=document.getElementById('ai-year');
+  const msel=document.getElementById('ai-month');
+  ysel.innerHTML='';
+  for(let y=d.getFullYear();y<=d.getFullYear()+1;y++){
+    const opt=document.createElement('option');
+    opt.value=y;opt.textContent=`${y}年`;
+    if(y===d.getFullYear())opt.selected=true;
+    ysel.appendChild(opt);
+  }
+  msel.innerHTML='';
+  for(let m=1;m<=12;m++){
+    const opt=document.createElement('option');
+    opt.value=m;opt.textContent=`${m}月`;
+    // 翌月をデフォルト
+    const nextM=d.getMonth()+2>12?1:d.getMonth()+2;
+    if(m===nextM)opt.selected=true;
+    msel.appendChild(opt);
+  }
+}
+
+async function aiReadCalendar(){
+  if(!aiCalendarImageBase64){showToast('⚠️ 画像を選択してください');return;}
+  const year=+document.getElementById('ai-year').value;
+  const month=+document.getElementById('ai-month').value;
+  const btn=document.getElementById('ai-read-btn');
+  const status=document.getElementById('ai-status');
+  btn.disabled=true;
+  btn.textContent='🤖 読み取り中...';
+  status.style.display='block';
+  status.textContent='AIがカレンダーを解析しています。少々お待ちください...';
+
+  // base64からメディアタイプを取得
+  const mediaTypeMatch=aiCalendarImageBase64.match(/^data:([^;]+);base64,/);
+  const mediaType=mediaTypeMatch?mediaTypeMatch[1]:'image/jpeg';
+  const base64Data=aiCalendarImageBase64.split(',')[1];
+
+  const prompt=`これは${year}年${month}月の平良商店のお弁当カレンダーです。
+カレンダーから各日の情報を読み取り、以下のJSON形式で返してください。
+平日（月〜金）のみ抽出し、土日・祝日はholidayフィールドに祝日名を入れてください。
+
+必ず以下のJSON形式のみで返し、説明文は一切不要です：
+{
+  "days": [
+    {"day": 1, "main": "料理名", "sides": ["副菜1", "副菜2", "副菜3"], "holiday": null},
+    {"day": 2, "main": null, "sides": [], "holiday": "祝日名"},
+    ...
+  ]
+}
+
+注意：
+- mainは日替わり弁当のメインの料理名のみ
+- sidesは副菜のリスト（最大3つ）
+- 土日はmain:null, sides:[], holidayはnull
+- 祝日はmain:null, holiday:"祝日名"
+- ${year}年${month}月の全日を含めてください`;
+
+  try{
+    const response=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:2000,
+        messages:[{
+          role:'user',
+          content:[
+            {type:'image',source:{type:'base64',media_type:mediaType,data:base64Data}},
+            {type:'text',text:prompt}
+          ]
+        }]
+      })
+    });
+    const data=await response.json();
+    const text=data.content.map(c=>c.text||'').join('');
+    // JSONを抽出
+    const jsonMatch=text.match(/\{[\s\S]*\}/);
+    if(!jsonMatch)throw new Error('JSONが見つかりません');
+    const parsed=JSON.parse(jsonMatch[0]);
+    aiParsedMenuData={year,month,days:parsed.days};
+    renderAiResult(year,month,parsed.days);
+    status.textContent=`✅ ${parsed.days.length}日分のメニューを読み取りました`;
+    document.getElementById('ai-result-area').style.display='block';
+  }catch(err){
+    console.error(err);
+    status.textContent='❌ 読み取りに失敗しました。画像を確認して再試行してください。';
+  }
+  btn.disabled=false;
+  btn.textContent='🤖 AIでメニューを読み取る';
+}
+
+function renderAiResult(year,month,days){
+  const list=document.getElementById('ai-result-list');
+  const daysInMonth=new Date(year,month,0).getDate();
+  list.innerHTML=days.filter(d=>d.day>=1&&d.day<=daysInMonth).map(d=>{
+    const dt=new Date(year,month-1,d.day);
+    const dowLabel=DOW[dt.getDay()];
+    if(d.holiday&&!d.main){
+      return`<div style="padding:5px 0;border-bottom:1px solid #f0f0f0;color:#C8401A;">
+        🎌 ${month}/${d.day}（${dowLabel}）${d.holiday}
+      </div>`;
+    }
+    if(!d.main){
+      return`<div style="padding:5px 0;border-bottom:1px solid #f0f0f0;color:#ccc;">
+        ${month}/${d.day}（${dowLabel}）休み
+      </div>`;
+    }
+    return`<div style="padding:5px 0;border-bottom:1px solid #f0f0f0;">
+      <span style="font-weight:700;">${month}/${d.day}（${dowLabel}）</span>
+      <span style="color:var(--primary);margin-left:6px;">${d.main}</span>
+      ${d.sides&&d.sides.length?`<div style="color:var(--text-sub);font-size:0.72rem;margin-top:1px;">${d.sides.join('・')}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function aiRegisterAll(){
+  if(!aiParsedMenuData.days)return;
+  const{year,month,days}=aiParsedMenuData;
+  const monthKey=`${year}-${pad(month)}`;
+  if(!menuData[monthKey])menuData[monthKey]={};
+  days.forEach(d=>{
+    if(d.day<1)return;
+    menuData[monthKey][d.day]={
+      main:d.main||null,
+      sides:d.sides||[],
+      holiday:d.holiday||null
+    };
+  });
+  saveMenuData();
+  // クラウドにも保存
+  const monthKey2=`${year}-${pad(month)}`;
+  if(menuData[monthKey2]) saveMenuDataToCloud(monthKey2, menuData[monthKey2]);
+  renderCalendar();
+  renderTodayMenu();
+  renderMenuList();
+  showToast(`✅ ${month}月のメニューを${days.length}日分登録しました！`);
+  document.getElementById('ai-result-area').style.display='none';
+  document.getElementById('ai-status').style.display='none';
+  document.getElementById('ai-preview-area').style.display='none';
+  document.getElementById('ai-year-month-select').style.display='none';
+  document.getElementById('ai-read-btn').style.display='none';
+  document.getElementById('ai-calendar-input').value='';
+  aiCalendarImageBase64='';
+  aiParsedMenuData={};
+}
+
+// ===== MENU REGISTRATION =====
+function initMenuRegSelects(){
+  const ysel=document.getElementById('menu-reg-year');
+  const msel=document.getElementById('menu-reg-month');
+  if(!ysel||!msel)return;
+  const d=now();
+  ysel.innerHTML='';
+  for(let y=d.getFullYear();y<=d.getFullYear()+1;y++){
+    const opt=document.createElement('option');
+    opt.value=y;opt.textContent=`${y}年`;
+    if(y===d.getFullYear())opt.selected=true;
+    ysel.appendChild(opt);
+  }
+  msel.innerHTML='';
+  for(let m=1;m<=12;m++){
+    const opt=document.createElement('option');
+    opt.value=m;opt.textContent=`${m}月`;
+    if(m===d.getMonth()+1)opt.selected=true;
+    msel.appendChild(opt);
+  }
+  updateMenuDaySelect();
+  ysel.onchange=updateMenuDaySelect;
+  msel.onchange=updateMenuDaySelect;
+  renderMenuList();
+}
+
+function updateMenuDaySelect(){
+  const y=+document.getElementById('menu-reg-year').value;
+  const m=+document.getElementById('menu-reg-month').value;
+  const days=new Date(y,m,0).getDate();
+  const dsel=document.getElementById('menu-reg-day');
+  const prev=+dsel.value||now().getDate();
+  dsel.innerHTML='';
+  for(let i=1;i<=days;i++){
+    const opt=document.createElement('option');
+    opt.value=i;opt.textContent=`${i}日`;
+    if(i===Math.min(prev,days))opt.selected=true;
+    dsel.appendChild(opt);
+  }
+  // 選択中の日のメニューをプレビュー
+  previewMenuEntry();
+}
+
+function previewMenuEntry(){
+  const y=+document.getElementById('menu-reg-year').value;
+  const m=+document.getElementById('menu-reg-month').value;
+  const d=+document.getElementById('menu-reg-day').value;
+  const monthKey=`${y}-${pad(m)}`;
+  const preview=document.getElementById('menu-reg-preview');
+  if(!preview)return;
+  const existing=menuData[monthKey]&&menuData[monthKey][d];
+  if(existing){
+    const sidesStr=(existing.sides||[]).join('、');
+    preview.innerHTML=`<div style="background:#FFF5F0;border:2px solid var(--accent);border-radius:10px;padding:10px 12px;font-size:0.82rem;">
+      <div style="font-size:0.7rem;color:var(--primary);font-weight:700;margin-bottom:4px;">✅ 登録済みのメニュー</div>
+      <div style="font-weight:700;">${existing.main||''}${existing.holiday?'🎌 '+existing.holiday:''}</div>
+      ${sidesStr?`<div style="color:var(--text-sub);margin-top:2px;">${sidesStr}</div>`:''}
+      <button onclick="deleteMenuEntry(${y},${m},${d})" style="margin-top:8px;padding:5px 12px;background:white;color:var(--primary);border:2px solid var(--primary);border-radius:8px;font-size:0.75rem;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;">このメニューを削除</button>
+    </div>`;
+    // フォームに既存値をセット
+    document.getElementById('menu-reg-main').value=existing.main||'';
+    document.getElementById('menu-reg-sides').value=(existing.sides||[]).join(',');
+    document.getElementById('menu-reg-holiday').value=existing.holiday||'';
+  }else{
+    preview.innerHTML='';
+    document.getElementById('menu-reg-main').value='';
+    document.getElementById('menu-reg-sides').value='';
+    document.getElementById('menu-reg-holiday').value='';
+  }
+}
+
+function saveMenuEntry(){
+  const y=+document.getElementById('menu-reg-year').value;
+  const m=+document.getElementById('menu-reg-month').value;
+  const d=+document.getElementById('menu-reg-day').value;
+  const main=document.getElementById('menu-reg-main').value.trim();
+  const sidesRaw=document.getElementById('menu-reg-sides').value.trim();
+  const holiday=document.getElementById('menu-reg-holiday').value.trim();
+  if(!main&&!holiday){showToast('⚠️ メニュー名または祝日名を入力してください');return;}
+  const sides=sidesRaw?sidesRaw.split(',').map(s=>s.trim()).filter(s=>s):[];
+  const monthKey=`${y}-${pad(m)}`;
+  if(!menuData[monthKey])menuData[monthKey]={};
+  menuData[monthKey][d]={main:main||null,sides,holiday:holiday||null};
+  saveMenuData();
+  saveMenuDataToCloud(monthKey, menuData[monthKey]);
+  showToast(`✅ ${m}月${d}日のメニューを登録しました`);
+  previewMenuEntry();
+  renderMenuList();
+  // カレンダーを更新
+  renderCalendar();
+  renderTodayMenu();
+}
+
+function deleteMenuEntry(y,m,d){
+  const monthKey=`${y}-${pad(m)}`;
+  if(menuData[monthKey]){
+    delete menuData[monthKey][d];
+    if(!Object.keys(menuData[monthKey]).length)delete menuData[monthKey];
+  }
+  saveMenuData();
+  // クラウドにも保存
+  if(menuData[monthKey]){
+    saveMenuDataToCloud(monthKey, menuData[monthKey]);
+  }
+  showToast('🗑️ メニューを削除しました');
+  previewMenuEntry();
+  renderMenuList();
+  renderCalendar();
+  renderTodayMenu();
+}
+
+function renderMenuList(){
+  const list=document.getElementById('menu-reg-list');
+  if(!list)return;
+  const allEntries=[];
+  Object.entries(menuData).forEach(([monthKey,days])=>{
+    Object.entries(days).forEach(([day,menu])=>{
+      allEntries.push({monthKey,day:+day,menu});
+    });
+  });
+  allEntries.sort((a,b)=>a.monthKey.localeCompare(b.monthKey)||a.day-b.day);
+  if(!allEntries.length){
+    list.innerHTML=`<div style="text-align:center;padding:16px;color:var(--text-sub);font-size:0.82rem;">登録済みメニューはありません</div>`;
+    return;
+  }
+  list.innerHTML=allEntries.map(({monthKey,day,menu})=>{
+    const[y,m]=monthKey.split('-').map(Number);
+    const dt=new Date(y,m-1,day);
+    const sidesStr=(menu.sides||[]).join('・');
+    return`<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--border);gap:8px;">
+      <div style="flex:1;">
+        <div style="font-size:0.82rem;font-weight:700;">${m}月${day}日（${DOW[dt.getDay()]}）</div>
+        <div style="font-size:0.76rem;color:var(--primary);">${menu.main||''}${menu.holiday?'🎌 '+menu.holiday:''}</div>
+        ${sidesStr?`<div style="font-size:0.7rem;color:var(--text-sub);">${sidesStr}</div>`:''}
+      </div>
+      <button onclick="deleteMenuEntry(${y},${m},${day})" style="padding:4px 8px;background:none;border:1px solid #ddd;border-radius:6px;font-size:0.68rem;color:var(--text-sub);cursor:pointer;flex-shrink:0;">削除</button>
+    </div>`;
+  }).join('');
+}
+
+// ===== ADMIN =====
+function adminUnlock(){
+  const pw=document.getElementById('admin-pw-input').value;
+  if(pw===ADMIN_PASSWORD){
+    adminUnlocked=true;
+    document.getElementById('admin-locked-view').style.display='none';
+    document.getElementById('admin-unlocked-view').style.display='block';
+    initMonthlySelect();
+    renderAdminSummary();
+    initMenuRegSelects();
+    initAppPublicUrlInput();
+    initSlackWebhookInput();
+    initLineGroupUrlInput();
+  }else{
+    showToast('⚠️ パスワードが違います');
+    document.getElementById('admin-pw-input').value='';
+  }
+}
+
+function renderAdminSummary(){
+  const sel=document.getElementById('admin-month-select').value;
+  const[y,m]=sel.split('-').map(Number);
+  const{keys:allKeys,hasCurrentOrders,todayKey}=getMonthKeys(sel);
+  const container=document.getElementById('admin-name-summary');
+  if(!allKeys.length){container.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text-sub);font-size:0.84rem;">この月の記録はありません</div>`;return;}
+
+  // 名前別集計
+  const nameSummary={};
+  allKeys.forEach(key=>{
+    const entry=getEntryForKey(key,todayKey,hasCurrentOrders);
+    (entry.orders||[]).forEach(o=>{
+      if(!nameSummary[o.name])nameSummary[o.name]={count:0,total:0,details:[]};
+      nameSummary[o.name].count++;
+      nameSummary[o.name].total+=o.price;
+      nameSummary[o.name].details.push(`${o.bentoName}${o.oomori?'(大)':''}`);
+    });
+  });
+
+  // 注文した人だけ・多い順
+  const sorted=Object.entries(nameSummary).sort((a,b)=>b[1].count-a[1].count);
+  let grandTotal=0,grandCount=0;
+  sorted.forEach(([,v])=>{grandTotal+=v.total;grandCount+=v.count;});
+
+  const rows=sorted.map(([name,v])=>`
+    <div class="name-summary-row">
+      <span class="person-name">${name}</span>
+      <span style="text-align:right">
+        <span class="name-summary-count">${v.count}個</span>
+        <span style="font-size:0.75rem;color:var(--text-sub);margin-left:8px;">¥${v.total.toLocaleString()}</span>
+      </span>
+    </div>`).join('');
+
+  container.innerHTML=`
+    <div style="font-size:0.75rem;color:var(--text-sub);margin-bottom:10px;">${y}年${m}月　注文者${sorted.length}名　計${grandCount}個　¥${grandTotal.toLocaleString()}</div>
+    ${rows}
+    <div class="total-band" style="margin-top:14px;"><span>合計（${grandCount}個）</span><span class="total-num">¥${grandTotal.toLocaleString()}</span></div>`;
+}
+
+function exportCSV(){
+  const sel=document.getElementById('admin-month-select').value;
+  const[y,m]=sel.split('-').map(Number);
+  const{keys:allKeys,hasCurrentOrders,todayKey}=getMonthKeys(sel);
+  if(!allKeys.length){showToast('この月の記録がありません');return;}
+
+  const nameSummary={};
+  allKeys.forEach(key=>{
+    const entry=getEntryForKey(key,todayKey,hasCurrentOrders);
+    (entry.orders||[]).forEach(o=>{
+      if(!nameSummary[o.name])nameSummary[o.name]={count:0,total:0};
+      nameSummary[o.name].count++;
+      nameSummary[o.name].total+=o.price;
+    });
+  });
+
+  const sorted=Object.entries(nameSummary).sort((a,b)=>b[1].count-a[1].count);
+  let csv='\uFEFF'; // BOM for Excel
+  csv+=`${y}年${m}月 弁当注文集計\n`;
+  csv+=`氏名,合計数,合計金額\n`;
+  sorted.forEach(([name,v])=>{
+    csv+=`${name},${v.count},${v.total}\n`;
+  });
+  const total=sorted.reduce((s,[,v])=>s+v.total,0);
+  const count=sorted.reduce((s,[,v])=>s+v.count,0);
+  csv+=`合計,${count},${total}\n`;
+
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`${m}月弁当注文集計.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`📥 ${m}月弁当注文集計.csv をダウンロードしました`);
+}
+
+function adminResetAll(){
+  if(!confirm('⚠️ 全データ（注文・月次記録・領収書）を完全に削除します。\nこの操作は元に戻せません。よろしいですか？'))return;
+  if(!confirm('本当に削除してよいですか？'))return;
+  orders=[];dailyHistory={};receipts={};
+  saveOrders();saveDailyHistory();saveReceipts();
+  updateBadge();renderAdminSummary();
+  showToast('🗑️ 全データを削除しました');
+}
+
+// ===== TEST DATA =====
+function injectTestData(){
+  if(!confirm('3月16〜19日のテストデータを投入しますか？'))return;
+  const testDays=[
+    {key:'2026-03-16',orders:[
+      {name:'大山 健太',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:45',date:'2026-03-16'},
+      {name:'斉藤 隆之',bentoId:2,bentoName:'唐揚げ弁当',emoji:'🍗',oomori:false,price:650,time:'08:50',date:'2026-03-16'},
+      {name:'崎原 盛奨',bentoId:3,bentoName:'生姜焼き弁当',emoji:'🥩',oomori:false,price:650,time:'08:55',date:'2026-03-16'},
+      {name:'慶田盛 大介',bentoId:3,bentoName:'生姜焼き弁当',emoji:'🥩',oomori:false,price:650,time:'09:00',date:'2026-03-16'},
+      {name:'中澤 勇太',bentoId:3,bentoName:'生姜焼き弁当',emoji:'🥩',oomori:false,price:650,time:'09:05',date:'2026-03-16'},
+      {name:'吉田 悠真',bentoId:4,bentoName:'照り焼きチキン弁当',emoji:'🍖',oomori:false,price:650,time:'09:08',date:'2026-03-16'},
+      {name:'大盛 俊',bentoId:4,bentoName:'照り焼きチキン弁当',emoji:'🍖',oomori:false,price:650,time:'09:10',date:'2026-03-16'},
+      {name:'大山 俊樹',bentoId:4,bentoName:'照り焼きチキン弁当',emoji:'🍖',oomori:false,price:650,time:'09:12',date:'2026-03-16'},
+    ]},
+    {key:'2026-03-17',orders:[
+      {name:'大山 健太',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:40',date:'2026-03-17'},
+      {name:'慶田盛 大介',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:45',date:'2026-03-17'},
+      {name:'斉藤 隆之',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:50',date:'2026-03-17'},
+      {name:'吉田 悠真',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:55',date:'2026-03-17'},
+      {name:'大盛 俊',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'09:00',date:'2026-03-17'},
+      {name:'崎原 盛奨',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'09:05',date:'2026-03-17'},
+    ]},
+    {key:'2026-03-18',orders:[
+      {name:'大山 健太',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:40',date:'2026-03-18'},
+      {name:'慶田盛 大介',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:45',date:'2026-03-18'},
+      {name:'斉藤 隆之',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:50',date:'2026-03-18'},
+      {name:'吉田 悠真',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:55',date:'2026-03-18'},
+      {name:'崎原 盛奨',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'09:00',date:'2026-03-18'},
+      {name:'大山 俊樹',bentoId:2,bentoName:'唐揚げ弁当',emoji:'🍗',oomori:false,price:650,time:'09:05',date:'2026-03-18'},
+      {name:'東蔵盛 肇',bentoId:2,bentoName:'唐揚げ弁当',emoji:'🍗',oomori:false,price:650,time:'09:08',date:'2026-03-18'},
+      {name:'東上里 汰生',bentoId:2,bentoName:'唐揚げ弁当',emoji:'🍗',oomori:true,price:700,time:'09:10',date:'2026-03-18'},
+    ]},
+    {key:'2026-03-19',orders:[
+      {name:'東蔵盛 肇',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:35',date:'2026-03-19'},
+      {name:'慶田盛 大介',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:40',date:'2026-03-19'},
+      {name:'浜崎 慎也',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:45',date:'2026-03-19'},
+      {name:'崎原 盛奨',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:48',date:'2026-03-19'},
+      {name:'斉藤 隆之',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:52',date:'2026-03-19'},
+      {name:'寄川 恵子',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:55',date:'2026-03-19'},
+      {name:'大山 健太',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'09:00',date:'2026-03-19'},
+      {name:'東上里 汰生',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'09:05',date:'2026-03-19'},
+      {name:'吉田 悠真',bentoId:2,bentoName:'唐揚げ弁当',emoji:'🍗',oomori:false,price:650,time:'09:08',date:'2026-03-19'},
+      {name:'坂上 昌彦',bentoId:3,bentoName:'生姜焼き弁当',emoji:'🥩',oomori:false,price:650,time:'09:10',date:'2026-03-19'},
+      {name:'寄川 恵子',bentoId:3,bentoName:'生姜焼き弁当',emoji:'🥩',oomori:false,price:650,time:'09:12',date:'2026-03-19'},
+    ]},
+  ];
+  let changed=false;
+  testDays.forEach(({key,orders:dayOrders})=>{
+    if(dailyHistory[key])return;
+    const agg={};let total=0;
+    dayOrders.forEach(o=>{const k=`${o.bentoId}-${o.oomori?1:0}`;if(!agg[k])agg[k]={bentoName:o.bentoName,emoji:o.emoji,oomori:o.oomori,price:o.price,count:0};agg[k].count++;total+=o.price;});
+    dailyHistory[key]={orders:dayOrders,total,summary:Object.values(agg),count:dayOrders.length};
+    changed=true;
+  });
+  if(changed)saveDailyHistory();
+  showToast('✅ 3/16〜19のテストデータを投入しました');
+  if(document.getElementById('section-monthly').classList.contains('active')){initMonthlySelect();renderMonthly();}
+}
+function clearTestData(){
+  if(!confirm('3月16〜19日のテストデータを削除しますか？'))return;
+  ['2026-03-16','2026-03-17','2026-03-18','2026-03-19'].forEach(k=>delete dailyHistory[k]);
+  saveDailyHistory();showToast('🗑️ テストデータを削除しました');
+  if(document.getElementById('section-monthly').classList.contains('active')){initMonthlySelect();renderMonthly();}
+}
+
+// ===== AUTO MONTHLY SEND =====
+function getLastWeekdayOfMonth(year,month){
+  let d=new Date(year,month+1,0);
+  while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()-1);
+  return d;
+}
+function checkAutoMonthlySend(){
+  const d=now();const h=d.getHours(),m=d.getMinutes();
+  if(h!==9||m!==20)return;
+  const lastWeekday=getLastWeekdayOfMonth(d.getFullYear(),d.getMonth());
+  if(d.getDate()!==lastWeekday.getDate()||d.getMonth()!==lastWeekday.getMonth())return;
+  const sentKey=`monthly_sent_${d.getFullYear()}-${pad(d.getMonth()+1)}`;
+  if(localStorage.getItem(sentKey)==='1')return;
+  localStorage.setItem(sentKey,'1');
+  archiveTodayOrders();
+  const sel=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
+  const{keys:allKeys,hasCurrentOrders,todayKey}=getMonthKeys(sel);
+  if(!allKeys.length)return;
+  let grandTotal=0,grandCount=0;
+  allKeys.forEach(key=>{const e=getEntryForKey(key,todayKey,hasCurrentOrders);grandTotal+=e.total;grandCount+=e.count;});
+  // Slackにも自動送信
+  const msg2=buildMonthlyLineMsg(sel,allKeys,grandTotal,grandCount,todayKey2,hasCurrentOrders2);
+  sendToSlack(msg2);
+  showToast('📋 月末集計をLINE・Slackに送信します');
+  setTimeout(()=>{openVendorPage();},1500);
+}
+
+// ===== TAB =====
+const TABS=['order','calendar','summary','receipt','monthly','history','admin'];
+function switchTab(tab){
+  TABS.forEach(t=>{document.getElementById(`section-${t}`).classList.toggle('active',t===tab);});
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>{b.classList.toggle('active',TABS[i]===tab);});
+  if(tab==='summary')renderSummary();
+  if(tab==='calendar')renderCalendar();
+  if(tab==='receipt')renderReceiptList();
+  if(tab==='monthly'){initMonthlySelect();renderMonthly();}
+  if(tab==='history')renderHistory();
+  if(tab==='admin'&&adminUnlocked){initMonthlySelect();renderAdminSummary();}
+}
+function updateBadge(){document.getElementById('count-badge').textContent=orders.length;}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+
+// ===== INIT =====
+loadState();
+// 起動時にクラウドからメニューデータを読み込む
+(async function initCloudData(){
+  try{
+    // メニューデータ
+    const cloudMenu=await loadMenuDataFromCloud();
+    if(Object.keys(cloudMenu).length>0){
+      Object.assign(menuData,cloudMenu);
+      saveMenuData();
+    }
+    // 領収書データ
+    const cloudReceipts=await loadReceiptsFromCloud();
+    if(Object.keys(cloudReceipts).length>0){
+      Object.assign(receipts,cloudReceipts);
+      saveReceipts();
+    }
+    renderTodayMenu();
+    renderBentoList();
+    renderCalendar();
+  }catch(e){console.error('初期クラウド読み込みエラー:',e);}
+})();
+(function autoInject(){
+  const testDays=[
+    {key:'2026-03-16',orders:[
+      {name:'大山 健太',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:45',date:'2026-03-16'},
+      {name:'斉藤 隆之',bentoId:2,bentoName:'唐揚げ弁当',emoji:'🍗',oomori:false,price:650,time:'08:50',date:'2026-03-16'},
+      {name:'崎原 盛奨',bentoId:3,bentoName:'生姜焼き弁当',emoji:'🥩',oomori:false,price:650,time:'08:55',date:'2026-03-16'},
+      {name:'慶田盛 大介',bentoId:3,bentoName:'生姜焼き弁当',emoji:'🥩',oomori:false,price:650,time:'09:00',date:'2026-03-16'},
+      {name:'中澤 勇太',bentoId:3,bentoName:'生姜焼き弁当',emoji:'🥩',oomori:false,price:650,time:'09:05',date:'2026-03-16'},
+      {name:'吉田 悠真',bentoId:4,bentoName:'照り焼きチキン弁当',emoji:'🍖',oomori:false,price:650,time:'09:08',date:'2026-03-16'},
+      {name:'大盛 俊',bentoId:4,bentoName:'照り焼きチキン弁当',emoji:'🍖',oomori:false,price:650,time:'09:10',date:'2026-03-16'},
+      {name:'大山 俊樹',bentoId:4,bentoName:'照り焼きチキン弁当',emoji:'🍖',oomori:false,price:650,time:'09:12',date:'2026-03-16'},
+    ]},
+    {key:'2026-03-17',orders:[
+      {name:'大山 健太',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:40',date:'2026-03-17'},
+      {name:'慶田盛 大介',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:45',date:'2026-03-17'},
+      {name:'斉藤 隆之',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:50',date:'2026-03-17'},
+      {name:'吉田 悠真',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:55',date:'2026-03-17'},
+      {name:'大盛 俊',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'09:00',date:'2026-03-17'},
+      {name:'崎原 盛奨',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'09:05',date:'2026-03-17'},
+    ]},
+    {key:'2026-03-18',orders:[
+      {name:'大山 健太',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:40',date:'2026-03-18'},
+      {name:'慶田盛 大介',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:45',date:'2026-03-18'},
+      {name:'斉藤 隆之',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:50',date:'2026-03-18'},
+      {name:'吉田 悠真',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:55',date:'2026-03-18'},
+      {name:'崎原 盛奨',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'09:00',date:'2026-03-18'},
+      {name:'大山 俊樹',bentoId:2,bentoName:'唐揚げ弁当',emoji:'🍗',oomori:false,price:650,time:'09:05',date:'2026-03-18'},
+      {name:'東蔵盛 肇',bentoId:2,bentoName:'唐揚げ弁当',emoji:'🍗',oomori:false,price:650,time:'09:08',date:'2026-03-18'},
+      {name:'東上里 汰生',bentoId:2,bentoName:'唐揚げ弁当',emoji:'🍗',oomori:true,price:700,time:'09:10',date:'2026-03-18'},
+    ]},
+    {key:'2026-03-19',orders:[
+      {name:'東蔵盛 肇',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:35',date:'2026-03-19'},
+      {name:'慶田盛 大介',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:40',date:'2026-03-19'},
+      {name:'浜崎 慎也',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:45',date:'2026-03-19'},
+      {name:'崎原 盛奨',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:48',date:'2026-03-19'},
+      {name:'斉藤 隆之',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:52',date:'2026-03-19'},
+      {name:'寄川 恵子',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'08:55',date:'2026-03-19'},
+      {name:'大山 健太',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'09:00',date:'2026-03-19'},
+      {name:'東上里 汰生',bentoId:1,bentoName:'日替わり弁当',emoji:'🍱',oomori:false,price:650,time:'09:05',date:'2026-03-19'},
+      {name:'吉田 悠真',bentoId:2,bentoName:'唐揚げ弁当',emoji:'🍗',oomori:false,price:650,time:'09:08',date:'2026-03-19'},
+      {name:'坂上 昌彦',bentoId:3,bentoName:'生姜焼き弁当',emoji:'🥩',oomori:false,price:650,time:'09:10',date:'2026-03-19'},
+      {name:'寄川 恵子',bentoId:3,bentoName:'生姜焼き弁当',emoji:'🥩',oomori:false,price:650,time:'09:12',date:'2026-03-19'},
+    ]},
+  ];
+  let changed=false;
+  testDays.forEach(({key,orders:dayOrders})=>{
+    if(dailyHistory[key])return;
+    const agg={};let total=0;
+    dayOrders.forEach(o=>{const k=`${o.bentoId}-${o.oomori?1:0}`;if(!agg[k])agg[k]={bentoName:o.bentoName,emoji:o.emoji,oomori:o.oomori,price:o.price,count:0};agg[k].count++;total+=o.price;});
+    dailyHistory[key]={orders:dayOrders,total,summary:Object.values(agg),count:dayOrders.length};
+    changed=true;
+  });
+  if(changed)saveDailyHistory();
+})();
+
+renderHeader();
+renderTodayMenu();
+renderBentoList();
+renderCalendar();
+initReceiptDateSelects();
+renderCart();
+updateBadge();
+setInterval(renderHeader,1000);
+setInterval(checkAutoMonthlySend,30000);
+checkAutoMonthlySend();
+</script>
+</body>
+</html>
