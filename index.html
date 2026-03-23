@@ -510,7 +510,10 @@ header{background:var(--primary);color:white;padding:calc(14px + env(safe-area-i
         <div style="font-size:0.72rem;opacity:0.85;margin-top:3px;" id="vendor-header-sub"></div>
         <div style="font-size:0.65rem;opacity:0.7;margin-top:2px;" id="vendor-last-updated"></div>
       </div>
-      <button onclick="vendorManualRefresh()" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:white;border-radius:8px;padding:5px 10px;font-size:0.7rem;font-family:'Noto Sans JP',sans-serif;cursor:pointer;margin-top:4px;white-space:nowrap;">🔄 更新</button>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+        <button onclick="vendorManualRefresh()" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:white;border-radius:8px;padding:5px 10px;font-size:0.7rem;font-family:'Noto Sans JP',sans-serif;cursor:pointer;white-space:nowrap;">🔄 更新</button>
+        <select id="vendor-month-select" onchange="onVendorMonthChange()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.4);color:white;border-radius:8px;padding:4px 8px;font-size:0.7rem;font-family:'Noto Sans JP',sans-serif;cursor:pointer;-webkit-appearance:none;"></select>
+      </div>
     </div>
   </div>
   <div style="max-width:640px;margin:0 auto;padding:18px 14px calc(40px + env(safe-area-inset-bottom));">
@@ -1454,7 +1457,40 @@ function closeVendorView(){
   document.body.style.overflow='';
   if(vendorRefreshTimer){clearInterval(vendorRefreshTimer);vendorRefreshTimer=null;}
 }
-function vendorManualRefresh(){loadState();renderVendorView(currentVendorSel);showToast('🔄 最新データに更新しました');}
+function vendorManualRefresh(){
+  (async()=>{
+    const[cloudHistory,cloudReceipts]=await Promise.all([
+      loadDailyHistoryFromCloud(currentVendorSel),
+      loadReceiptsFromCloud()
+    ]);
+    if(Object.keys(cloudHistory).length>0){Object.assign(dailyHistory,cloudHistory);saveDailyHistory();}
+    if(Object.keys(cloudReceipts).length>0){Object.assign(receipts,cloudReceipts);saveReceipts();}
+    renderVendorView(currentVendorSel);
+    showToast('🔄 最新データに更新しました');
+  })();
+}
+
+function initVendorMonthSelect(){
+  const sel=document.getElementById('vendor-month-select');
+  if(!sel)return;
+  sel.innerHTML='';
+  const d=now();
+  for(let i=0;i<=5;i++){
+    const dt=new Date(d.getFullYear(),d.getMonth()-i,1);
+    const val=`${dt.getFullYear()}-${pad(dt.getMonth()+1)}`;
+    const opt=document.createElement('option');
+    opt.value=val;opt.textContent=`${dt.getFullYear()}年${dt.getMonth()+1}月`;
+    if(i===0)opt.selected=true;
+    sel.appendChild(opt);
+  }
+}
+
+function onVendorMonthChange(){
+  const sel=document.getElementById('vendor-month-select');
+  if(!sel)return;
+  currentVendorSel=sel.value;
+  renderVendorView(currentVendorSel);
+}
 function vendorOpenImg(key){const r=receipts[key];if(!r)return;document.getElementById('modal-img').src=r.dataUrl;document.getElementById('modal-overlay').classList.remove('hidden');}
 
 function renderVendorView(sel){
@@ -2270,6 +2306,37 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 
 // ===== INIT =====
 loadState();
+
+// ?taira が付いていたら平良商店用ページを自動表示
+(async function checkVendorMode(){
+  if(window.location.search.includes('taira')||window.location.hash.includes('taira')){
+    // 通常UIを非表示
+    document.querySelector('header').style.display='none';
+    document.querySelector('.container').style.display='none';
+    // 平良商店用ビューを表示
+    const vv=document.getElementById('vendor-view');
+    vv.style.display='block';
+    // 閉じるボタンを非表示（専用ページなので不要）
+    const closeBtn=vv.querySelector('button[onclick="closeVendorView()"]');
+    if(closeBtn) closeBtn.style.display='none';
+    // 最新月を自動選択して表示
+    const d=now();
+    const sel=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
+    // クラウドから全データ読み込み
+    try{
+      const[cloudHistory,cloudReceipts]=await Promise.all([
+        loadDailyHistoryFromCloud(sel),
+        loadReceiptsFromCloud()
+      ]);
+      if(Object.keys(cloudHistory).length>0){Object.assign(dailyHistory,cloudHistory);saveDailyHistory();}
+      if(Object.keys(cloudReceipts).length>0){Object.assign(receipts,cloudReceipts);saveReceipts();}
+    }catch(e){console.error(e);}
+    currentVendorSel=sel;
+    renderVendorView(sel);
+    return; // 通常の初期化はスキップ
+  }
+})();
+
 // 起動時にクラウドからメニューデータを読み込む
 (async function initCloudData(){
   try{
