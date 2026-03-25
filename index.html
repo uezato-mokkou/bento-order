@@ -1,1 +1,561 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>お弁当注文システム ご説明資料</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Kaisei+Decol:wght@700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans JP',sans-serif;background:#FFF9F5;color:#1C1008;line-height:1.7;}
+
+/* COVER */
+.cover{background:linear-gradient(135deg,#C8401A,#E8602A);color:white;padding:60px 40px;text-align:center;position:relative;overflow:hidden;}
+.cover::before{content:'🍱';position:absolute;font-size:200px;opacity:0.08;top:-20px;right:-20px;}
+.cover-label{font-size:0.85rem;letter-spacing:0.2em;opacity:0.85;margin-bottom:12px;}
+.cover-title{font-family:'Kaisei Decol',serif;font-size:2.4rem;font-weight:700;line-height:1.3;margin-bottom:16px;}
+.cover-sub{font-size:1rem;opacity:0.9;line-height:1.8;}
+.cover-company{margin-top:24px;font-size:0.85rem;opacity:0.75;}
+
+/* LAYOUT */
+.container{max-width:900px;margin:0 auto;padding:40px 24px;}
+
+/* SECTION */
+.section{margin-bottom:50px;}
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:24px;padding-bottom:12px;border-bottom:3px solid #C8401A;}
+.section-num{width:40px;height:40px;background:#C8401A;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.1rem;flex-shrink:0;}
+.section-title{font-family:'Kaisei Decol',serif;font-size:1.5rem;font-weight:700;color:#C8401A;}
+
+/* FLOW */
+.flow{display:flex;flex-direction:column;gap:0;}
+.flow-item{display:flex;align-items:flex-start;gap:16px;padding:20px;background:white;border-radius:14px;box-shadow:0 2px 12px rgba(200,64,26,0.1);margin-bottom:4px;position:relative;}
+.flow-arrow{text-align:center;padding:6px 0;color:#C8401A;font-size:1.4rem;font-weight:900;}
+.flow-icon{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;}
+.flow-icon.red{background:#FFF0EE;}
+.flow-icon.green{background:#F0FFF5;}
+.flow-icon.blue{background:#EEF4FF;}
+.flow-icon.orange{background:#FFF8E8;}
+.flow-icon.purple{background:#F8F0FF;}
+.flow-content{flex:1;}
+.flow-step{font-size:0.72rem;font-weight:700;color:#C8401A;letter-spacing:0.1em;margin-bottom:4px;}
+.flow-name{font-size:1rem;font-weight:700;margin-bottom:4px;}
+.flow-desc{font-size:0.85rem;color:#7A6A5A;line-height:1.6;}
+
+/* CARDS */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;}
+.card{background:white;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(200,64,26,0.1);border-top:4px solid #C8401A;}
+.card-icon{font-size:2rem;margin-bottom:10px;}
+.card-title{font-weight:700;font-size:1rem;margin-bottom:8px;color:#C8401A;}
+.card-body{font-size:0.84rem;color:#7A6A5A;line-height:1.7;}
+
+/* SCREEN MOCKUP */
+.mockup{background:white;border-radius:20px;box-shadow:0 4px 24px rgba(0,0,0,0.15);overflow:hidden;max-width:360px;margin:0 auto;}
+.mockup-bar{background:#C8401A;color:white;padding:14px 16px;font-size:0.82rem;font-weight:700;}
+.mockup-body{padding:16px;}
+.mockup-item{background:#FFF5F0;border-radius:10px;padding:12px 14px;margin-bottom:8px;font-size:0.82rem;}
+.mockup-item-title{font-weight:700;color:#C8401A;margin-bottom:3px;}
+.mockup-btn{background:#C8401A;color:white;border-radius:10px;padding:12px;text-align:center;font-weight:700;font-size:0.9rem;margin-top:10px;}
+.mockup-btn.green{background:#06C755;}
+.mockup-btn.blue{background:#1A5CB8;}
+
+/* MSG BOX */
+.msg-box{background:#E8F5E9;border-radius:16px;padding:20px 22px;font-size:0.85rem;line-height:1.9;border:2px solid #A5D6A7;white-space:pre-wrap;font-family:'Noto Sans JP',sans-serif;}
+.msg-box.line{background:#F0FFF5;border-color:#06C755;}
+.msg-box.slack{background:#F5F0FF;border-color:#7B68EE;}
+
+/* TABLE */
+.info-table{width:100%;border-collapse:collapse;font-size:0.88rem;}
+.info-table th{background:#C8401A;color:white;padding:10px 14px;text-align:left;}
+.info-table td{padding:10px 14px;border-bottom:1px solid #EDE0D0;background:white;}
+.info-table tr:last-child td{border-bottom:none;}
+
+/* BADGE */
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;}
+.badge.red{background:#FFF0EE;color:#C8401A;}
+.badge.green{background:#F0FFF5;color:#2D6A4F;}
+.badge.blue{background:#EEF4FF;color:#1A5CB8;}
+
+/* URL BOX */
+.url-box{background:#1C1008;color:#4fffb0;border-radius:12px;padding:16px 20px;font-family:monospace;font-size:0.88rem;margin:10px 0;word-break:break-all;}
+.url-label{font-size:0.75rem;color:#aaa;margin-bottom:6px;font-family:'Noto Sans JP',sans-serif;}
+
+/* HIGHLIGHT */
+.highlight{background:linear-gradient(135deg,#FFF8E8,#FFE8D0);border:2px solid #F4A636;border-radius:14px;padding:18px 20px;margin:16px 0;}
+.highlight-title{font-weight:700;color:#B87800;margin-bottom:8px;font-size:0.9rem;}
+.highlight-body{font-size:0.85rem;color:#7A6A5A;line-height:1.7;}
+
+/* PAGE BREAK */
+.page-break{border:none;border-top:2px dashed #EDE0D0;margin:50px 0;}
+
+/* FOOTER */
+footer{background:#1C1008;color:white;text-align:center;padding:24px;font-size:0.8rem;opacity:0.8;}
+
+@media print{
+  .page-break{page-break-after:always;}
+  body{background:white;}
+  .cover{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== COVER ===== -->
+<div class="cover">
+  <div class="cover-label">システムご説明資料</div>
+  <div class="cover-title">🍱 お弁当注文システム<br>ご利用ガイド</div>
+  <div class="cover-sub">
+    平良商店 様 ／ うえざと木工社員の皆様へ<br>
+    注文・集計・月次報告がすべてスマートフォンで完結します
+  </div>
+  <div class="cover-company">有限会社うえざと木工　制作・運用</div>
+</div>
+
+<div class="container">
+
+  <!-- ===== 1. システム概要 ===== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div class="section-title">システム概要</div>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">📱</div>
+        <div class="card-title">スマホ・PCで注文</div>
+        <div class="card-body">URLをホーム画面に追加するとアプリのように使えます。iPhoneでもAndroidでもPCでも動作します。</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">☁️</div>
+        <div class="card-title">リアルタイム共有</div>
+        <div class="card-body">クラウドにデータが保存されるため、誰がどこからアクセスしても最新の注文状況が確認できます。</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">📊</div>
+        <div class="card-title">自動集計・送信</div>
+        <div class="card-body">注文が集まると自動で集計。LINEで平良商店さんへ送信、Slackに自動通知されます。</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">📋</div>
+        <div class="card-title">月次報告も自動化</div>
+        <div class="card-body">月末に月次集計と納品書確認URLをLINE・Slackで自動送信。平良商店さんはURLを開くだけで確認できます。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 2. 毎日の流れ ===== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div class="section-title">毎日の注文の流れ</div>
+    </div>
+
+    <div class="flow">
+
+      <div class="flow-item">
+        <div class="flow-icon red">📝</div>
+        <div class="flow-content">
+          <div class="flow-step">STEP 1　前日13:00〜当日9:20</div>
+          <div class="flow-name">社員が注文する</div>
+          <div class="flow-desc">
+            アプリを開いて名前を選択（フリガナでも検索可）→ お弁当を選ぶ → 「注文を確定する」ボタンを押す。<br>
+            1分もかかりません！
+          </div>
+        </div>
+      </div>
+      <div class="flow-arrow">↓</div>
+
+      <div class="flow-item">
+        <div class="flow-icon orange">📊</div>
+        <div class="flow-content">
+          <div class="flow-step">STEP 2　9:20以降</div>
+          <div class="flow-name">担当者が集計・送信する</div>
+          <div class="flow-desc">
+            「集計」タブを開くと全員の注文が自動集計済み。<br>
+            「LINEで平良商店へ注文を送る」ボタンを押すとLINEが開きます。<br>
+            ※ 同時にSlackへも自動送信されます。
+          </div>
+        </div>
+      </div>
+      <div class="flow-arrow">↓</div>
+
+      <div class="flow-item">
+        <div class="flow-icon green">🏪</div>
+        <div class="flow-content">
+          <div class="flow-step">STEP 3　平良商店さん</div>
+          <div class="flow-name">LINEで注文を受け取る</div>
+          <div class="flow-desc">
+            LINEに注文内容が届きます。個数・金額が整理されているので確認が簡単です。
+          </div>
+        </div>
+      </div>
+      <div class="flow-arrow">↓</div>
+
+      <div class="flow-item">
+        <div class="flow-icon blue">🧾</div>
+        <div class="flow-content">
+          <div class="flow-step">STEP 4　お昼以降</div>
+          <div class="flow-name">納品書をアップロードする</div>
+          <div class="flow-desc">
+            お弁当受け取り後、「納品書」タブから写真を撮影してアップロード。<br>
+            クラウドに保存されるので平良商店さんも確認できます。
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <hr class="page-break">
+
+  <!-- ===== 3. 注文画面の使い方 ===== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div class="section-title">注文画面の使い方（社員向け）</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:start;">
+      <div>
+        <div class="mockup">
+          <div class="mockup-bar">🍱 平良商店 お弁当注文　　3月25日(水)</div>
+          <div class="mockup-body">
+            <div style="background:#FFF0E8;border-radius:10px;padding:12px;margin-bottom:12px;font-size:0.8rem;">
+              <div style="font-size:0.7rem;font-weight:700;color:#C8401A;">🗓 3月25日（水）の日替わり弁当</div>
+              <div style="font-weight:700;font-size:0.95rem;">豚バラ味噌炒め</div>
+              <div style="font-size:0.72rem;color:#7A6A5A;">鶏と野菜の炊き合わせ／ジャガイモのツナ和え</div>
+            </div>
+            <div style="font-size:0.75rem;font-weight:700;color:#7A6A5A;margin-bottom:6px;">👤 お名前を選択または入力</div>
+            <div style="border:2px solid #EDE0D0;border-radius:10px;padding:10px 12px;font-size:0.85rem;color:#aaa;margin-bottom:12px;">名前 or フリガナで検索...</div>
+            <div class="mockup-item">
+              <div class="mockup-item-title">🍱 日替わり弁当</div>
+              <div style="font-size:0.75rem;color:#7A6A5A;">通常650円 ／ 大盛り700円</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;">
+                <div style="border:2px solid #C8401A;background:#C8401A;color:white;border-radius:8px;padding:7px;text-align:center;font-size:0.78rem;font-weight:700;">普通盛り<br>650円</div>
+                <div style="border:2px solid #EDE0D0;border-radius:8px;padding:7px;text-align:center;font-size:0.78rem;color:#7A6A5A;">大盛り<br>700円</div>
+              </div>
+            </div>
+            <div class="mockup-btn">✅ 注文を確定する</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:0.9rem;line-height:1.9;">
+          <p style="font-weight:700;color:#C8401A;margin-bottom:12px;">📌 操作手順</p>
+          <div style="background:white;border-radius:12px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,0.08);margin-bottom:12px;">
+            <p style="font-weight:700;margin-bottom:6px;">① 名前を選ぶ</p>
+            <p style="font-size:0.82rem;color:#7A6A5A;">検索欄をタップして名前を入力。漢字でもフリガナでも検索できます。一覧から名前をタップして選択。</p>
+          </div>
+          <div style="background:white;border-radius:12px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,0.08);margin-bottom:12px;">
+            <p style="font-weight:700;margin-bottom:6px;">② お弁当を選ぶ</p>
+            <p style="font-size:0.82rem;color:#7A6A5A;">日替わり・唐揚げ・生姜焼き・照り焼きチキンの中から選択。「普通盛り」または「大盛り（+50円）」を選ぶ。</p>
+          </div>
+          <div style="background:white;border-radius:12px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,0.08);">
+            <p style="font-weight:700;margin-bottom:6px;">③ 確定する</p>
+            <p style="font-size:0.82rem;color:#7A6A5A;">「✅ 注文を確定する」ボタンを押して完了！クラウドに自動保存されます。</p>
+          </div>
+          <div class="highlight" style="margin-top:14px;">
+            <div class="highlight-title">💡 今月の注文履歴も確認できる</div>
+            <div class="highlight-body">名前を選んだ時に「今月 ○個 ¥○○○」と今月の注文合計が表示されます。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 4. 集計・LINE送信 ===== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <div class="section-title">集計・LINE送信（担当者向け）</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:start;">
+      <div>
+        <div class="mockup">
+          <div class="mockup-bar">📊 集計　3月25日(水)　6個</div>
+          <div class="mockup-body">
+            <div style="background:white;border-radius:10px;padding:12px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,0.08);">
+              <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #EDE0D0;font-size:0.82rem;"><span>🍱 日替わり弁当（普通盛り）</span><span style="font-weight:700;color:#C8401A;">4個</span></div>
+              <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:0.82rem;"><span>🍗 唐揚げ弁当（普通盛り）</span><span style="font-weight:700;color:#C8401A;">2個</span></div>
+              <div style="background:linear-gradient(135deg,#C8401A,#E8602A);color:white;border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;margin-top:8px;">
+                <span style="font-weight:700;font-size:0.85rem;">合計金額</span>
+                <span style="font-weight:700;font-size:1rem;">¥3,900</span>
+              </div>
+            </div>
+            <div class="mockup-btn green">
+              🟢 LINEで平良商店へ注文を送る
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <p style="font-weight:700;color:#C8401A;margin-bottom:12px;font-size:0.9rem;">📤 LINEに送られる内容</p>
+        <div class="msg-box line" style="font-size:0.8rem;">平良商店　様
+
+いつもお世話になっております。
+3月25日（水）のお弁当注文をお送りします。
+
+━━━━━━━━━━━━
+・日替わり弁当（普通盛り）× 4個
+・唐揚げ弁当（普通盛り）× 2個
+━━━━━━━━━━━━
+合計 6個　¥3,900
+
+お手数をおかけしますが、
+何卒よろしくお願いいたします🙏</div>
+        <div class="highlight" style="margin-top:14px;">
+          <div class="highlight-title">💬 Slackにも自動送信</div>
+          <div class="highlight-body">LINEボタンを押すと同時に社内Slackの「#_弁当注文」チャンネルにも同じ内容が自動で送信されます。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="page-break">
+
+  <!-- ===== 5. 平良商店さん専用ページ ===== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <div class="section-title">平良商店さん専用ページ</div>
+    </div>
+
+    <div class="highlight">
+      <div class="highlight-title">🏪 平良商店さん専用URL</div>
+      <div class="url-box">https://uezato-mokkou.github.io/bento-order/?taira</div>
+      <div class="highlight-body">このURLを開くだけで月次集計・納品書確認ページが表示されます。ブックマーク推奨！</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:start;margin-top:24px;">
+      <div>
+        <div class="mockup">
+          <div class="mockup-bar" style="background:#2D6A4F;">🍱 お弁当代金 月次集計　　🔄 更新</div>
+          <div class="mockup-body" style="background:#F8FFF8;">
+            <div style="font-size:0.72rem;color:#7A6A5A;margin-bottom:10px;">2026年3月分　/ 2026年3月25日現在</div>
+            <div style="background:white;border-radius:10px;padding:12px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,0.08);">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="font-weight:700;font-size:0.85rem;">3月16日（月）</span><span style="color:#C8401A;font-weight:700;">¥5,200</span></div>
+              <div style="font-size:0.72rem;color:#7A6A5A;">🍱日替わり×1　🍗唐揚げ×1　🥩生姜焼き×3　🍖照り焼き×3</div>
+              <div style="margin-top:8px;font-size:0.7rem;font-weight:700;color:#2D6A4F;">📄 納品書</div>
+              <div style="background:#f0f0f0;border-radius:6px;height:50px;margin-top:4px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:#aaa;">納品書画像</div>
+            </div>
+            <div style="background:linear-gradient(135deg,#2D6A4F,#3D8A6F);color:white;border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;">
+              <span style="font-weight:700;font-size:0.82rem;">月合計（35個）</span>
+              <span style="font-weight:700;font-size:1rem;">¥22,800</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <p style="font-weight:700;color:#2D6A4F;margin-bottom:12px;font-size:0.9rem;">✅ 確認できる内容</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="background:white;border-radius:12px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,0.08);display:flex;gap:10px;align-items:flex-start;">
+            <span style="font-size:1.3rem;">📅</span>
+            <div>
+              <div style="font-weight:700;font-size:0.88rem;margin-bottom:3px;">日別の注文内容</div>
+              <div style="font-size:0.78rem;color:#7A6A5A;">各日の弁当種類・個数・金額が一覧で確認できます</div>
+            </div>
+          </div>
+          <div style="background:white;border-radius:12px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,0.08);display:flex;gap:10px;align-items:flex-start;">
+            <span style="font-size:1.3rem;">🧾</span>
+            <div>
+              <div style="font-weight:700;font-size:0.88rem;margin-bottom:3px;">納品書の確認</div>
+              <div style="font-size:0.78rem;color:#7A6A5A;">各日の納品書写真をタップで拡大表示できます</div>
+            </div>
+          </div>
+          <div style="background:white;border-radius:12px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,0.08);display:flex;gap:10px;align-items:flex-start;">
+            <span style="font-size:1.3rem;">📊</span>
+            <div>
+              <div style="font-weight:700;font-size:0.88rem;margin-bottom:3px;">月合計金額</div>
+              <div style="font-size:0.78rem;color:#7A6A5A;">月の合計個数と金額がひと目でわかります</div>
+            </div>
+          </div>
+          <div style="background:white;border-radius:12px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,0.08);display:flex;gap:10px;align-items:flex-start;">
+            <span style="font-size:1.3rem;">🔄</span>
+            <div>
+              <div style="font-weight:700;font-size:0.88rem;margin-bottom:3px;">リアルタイム更新</div>
+              <div style="font-size:0.78rem;color:#7A6A5A;">「更新」ボタンで最新データに即時反映されます</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 6. 月次報告の流れ ===== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">6</div>
+      <div class="section-title">月次報告の流れ</div>
+    </div>
+
+    <div class="flow">
+      <div class="flow-item">
+        <div class="flow-icon orange">📋</div>
+        <div class="flow-content">
+          <div class="flow-step">月末最終平日</div>
+          <div class="flow-name">月次集計をLINEで送信</div>
+          <div class="flow-desc">「月次」タブから「平良商店用ページを開く」ボタンを押すと、月次LINEメッセージが自動作成されます。Slackにも同時送信。</div>
+        </div>
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-item">
+        <div class="flow-icon green">📱</div>
+        <div class="flow-content">
+          <div class="flow-step">平良商店さん</div>
+          <div class="flow-name">LINEで月次報告を受け取る</div>
+          <div class="flow-desc">LINEにメッセージが届きます。メッセージ内のURLをタップすると専用ページが開き、全日程の集計と納品書が確認できます。</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <p style="font-weight:700;color:#C8401A;margin-bottom:10px;font-size:0.9rem;">📤 LINEに送られる月次メッセージ（例）</p>
+      <div class="msg-box line" style="font-size:0.8rem;">平良商店　様
+
+いつも大変お世話になっております。
+2026年3月24日付にて、2026年3月分のお弁当代金の月次集計をご報告申し上げます。
+
+━━━━━━━━━━━━
+✅ 3/16（月） 日替わり×1、唐揚げ×1、生姜焼き×3、照り焼き×3 ¥5,200
+✅ 3/17（火） 日替わり×6 ¥3,900
+✅ 3/18（水） 日替わり×5、唐揚げ×2、唐揚げ大盛×1 ¥5,250
+✅ 3/19（木） 日替わり×8、唐揚げ×1、生姜焼き×2 ¥7,150
+━━━━━━━━━━━━
+月合計 35個　¥22,800
+
+今月も美味しいお弁当をありがとうございました。
+来月もどうぞよろしくお願いいたします🙏
+
+📋 月次集計・納品書のご確認はこちら：
+https://uezato-mokkou.github.io/bento-order/?taira</div>
+    </div>
+  </div>
+
+  <hr class="page-break">
+
+  <!-- ===== 7. URL一覧 ===== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">7</div>
+      <div class="section-title">URL・アクセス方法</div>
+    </div>
+
+    <table class="info-table">
+      <tr>
+        <th>対象</th>
+        <th>URL</th>
+        <th>用途</th>
+      </tr>
+      <tr>
+        <td><span class="badge red">社員用</span></td>
+        <td style="font-family:monospace;font-size:0.82rem;">https://uezato-mokkou.github.io/bento-order/</td>
+        <td style="font-size:0.84rem;">注文・集計・月次・納品書・管理</td>
+      </tr>
+      <tr>
+        <td><span class="badge green">平良商店さん専用</span></td>
+        <td style="font-family:monospace;font-size:0.82rem;">https://uezato-mokkou.github.io/bento-order/?taira</td>
+        <td style="font-size:0.84rem;">月次集計・納品書確認のみ</td>
+      </tr>
+    </table>
+
+    <div class="highlight" style="margin-top:20px;">
+      <div class="highlight-title">📱 ホーム画面への追加方法（iPhone）</div>
+      <div class="highlight-body">
+        ① SafariでURLを開く<br>
+        ② 画面下の「共有」ボタン（□↑）をタップ<br>
+        ③「ホーム画面に追加」をタップ<br>
+        ④「追加」をタップ<br>
+        → アプリのように使えるようになります！
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 8. 受付時間 ===== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">8</div>
+      <div class="section-title">注文受付時間</div>
+    </div>
+
+    <table class="info-table">
+      <tr>
+        <th>時間帯</th>
+        <th>状態</th>
+        <th>対象</th>
+      </tr>
+      <tr>
+        <td>前日 13:00 〜 当日 9:20</td>
+        <td><span class="badge green">✅ 注文可能</span></td>
+        <td style="font-size:0.84rem;">翌日（13時以降）または当日（9:20まで）の注文</td>
+      </tr>
+      <tr>
+        <td>9:20 〜 12:59</td>
+        <td><span class="badge red">🔴 受付時間外</span></td>
+        <td style="font-size:0.84rem;">この時間帯は注文できません</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ===== 9. お弁当メニュー ===== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">9</div>
+      <div class="section-title">お弁当メニュー（全4種）</div>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">🍱</div>
+        <div class="card-title">① 日替わり弁当</div>
+        <div class="card-body">毎日メニューが変わります。カレンダーで内容を事前確認できます。<br><br>通常 650円 ／ 大盛り 700円</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🍗</div>
+        <div class="card-title">② 唐揚げ弁当</div>
+        <div class="card-body">ジューシーな唐揚げがメインのお弁当です。<br><br>通常 650円 ／ 大盛り 700円</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🥩</div>
+        <div class="card-title">③ 生姜焼き弁当</div>
+        <div class="card-body">香ばしい生姜焼きがメインのお弁当です。<br><br>通常 650円 ／ 大盛り 700円</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🍖</div>
+        <div class="card-title">④ 照り焼きチキン弁当</div>
+        <div class="card-body">甘辛照り焼きチキンがメインのお弁当です。<br><br>通常 650円 ／ 大盛り 700円</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 10. お問い合わせ ===== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">10</div>
+      <div class="section-title">お問い合わせ</div>
+    </div>
+    <table class="info-table">
+      <tr>
+        <th>項目</th>
+        <th>内容</th>
+      </tr>
+      <tr>
+        <td>平良商店</td>
+        <td>☎ 0980-87-0890　／　登野城漁港内マンタ公園向かい</td>
+      </tr>
+      <tr>
+        <td>システム管理</td>
+        <td>有限会社うえざと木工　管理者まで</td>
+      </tr>
+    </table>
+  </div>
+
+</div>
+
+<footer>
+  © 2026 有限会社うえざと木工　お弁当注文システム説明資料
+</footer>
+
+</body>
+</html>
 
