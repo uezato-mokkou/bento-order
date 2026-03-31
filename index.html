@@ -495,7 +495,7 @@ header{background:var(--primary);color:white;padding:calc(14px + env(safe-area-i
             <div style="font-size:0.84rem;font-weight:700;color:var(--blue);">カレンダー画像・PDFを選択</div>
             <div style="font-size:0.7rem;color:var(--text-sub);margin-top:3px;">JPG / PNG / PDF 対応</div>
           </div>
-          <input type="file" id="ai-calendar-input" accept="image/*,application/pdf" style="display:none;">
+
           <div id="ai-preview-area" style="display:none;margin-bottom:10px;">
             <img id="ai-preview-img" src="" style="width:100%;border-radius:10px;border:1px solid var(--border);" alt="カレンダープレビュー">
           </div>
@@ -568,6 +568,8 @@ header{background:var(--primary);color:white;padding:calc(14px + env(safe-area-i
 </div>
 
 <div class="toast" id="toast"></div>
+<!-- AI カレンダー入力（常にDOM上に存在させる） -->
+<input type="file" id="ai-calendar-input" accept="image/*,application/pdf" style="display:none;position:fixed;top:-9999px;">
 
 <script>
 // ===== SUPABASE 設定 =====
@@ -1923,11 +1925,11 @@ let aiParsedMenuData={};
 
 // ファイル選択ハンドラ（adminUnlock後に登録）
 function initAiCalendarInput(){
+  // inputは常にDOMに存在するので確実に登録
   const input=document.getElementById('ai-calendar-input');
   if(input){
     input.removeEventListener('change',onAiFileSelected);
     input.addEventListener('change',onAiFileSelected);
-    console.log('AI calendar input initialized');
   }
 }
 
@@ -2562,6 +2564,11 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 // 古いappPublicUrlを強制削除
 try{localStorage.removeItem('bento_app_public_url');}catch(e){}
 loadState();
+// AI カレンダー入力は起動時から登録
+(function(){
+  const input=document.getElementById('ai-calendar-input');
+  if(input) input.addEventListener('change',onAiFileSelected);
+})();
 
 // 起動時に当日の注文状態を確認
 // Supabaseの注文データと同期（localStorageより優先）
