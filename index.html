@@ -856,6 +856,7 @@ function loadState(){
   const lockedKey='order_locked_'+dateKey();
   orderLocked=localStorage.getItem(lockedKey)==='1';
   slackWebhookUrl=localStorage.getItem('bento_slack_webhook')||'';
+  console.log('Slack URL loaded:', slackWebhookUrl?'設定済み':'未設定');
   appPublicUrl=''; // 固定URLのみ使用
 }
 function saveLineGroupUrl(){localStorage.setItem('bento_line_group_url',lineGroupUrl);}
@@ -1277,6 +1278,9 @@ function sendToLine(){
   if(!orders.length){showToast('注文がありません');return;}
   const msg=buildLineMsg();
   // Slackに同時送信（設定済みの場合）
+  // localStorageから再読み込みして確実に送信
+  const savedSlack=localStorage.getItem('bento_slack_webhook')||'';
+  if(savedSlack) slackWebhookUrl=savedSlack;
   sendToSlack(msg);
   // LINE URL方式で送信（メッセージが入力済み状態で開く）
   window.open('https://line.me/R/msg/text/?'+encodeURIComponent(msg),'_blank');
@@ -1917,11 +1921,15 @@ function updateLineGroupStatus(){
 let aiCalendarImageBase64='';
 let aiParsedMenuData={};
 
-// ファイル選択ハンドラ
-document.addEventListener('DOMContentLoaded',()=>{
+// ファイル選択ハンドラ（adminUnlock後に登録）
+function initAiCalendarInput(){
   const input=document.getElementById('ai-calendar-input');
-  if(input) input.addEventListener('change',onAiFileSelected);
-});
+  if(input){
+    input.removeEventListener('change',onAiFileSelected);
+    input.addEventListener('change',onAiFileSelected);
+    console.log('AI calendar input initialized');
+  }
+}
 
 function onAiFileSelected(e){
   const file=e.target.files[0];
@@ -2244,10 +2252,11 @@ function adminUnlock(){
     document.getElementById('admin-unlocked-view').style.display='block';
     initMonthlySelect();
     renderAdminSummary();
-    initMenuRegSelects();
     initAppPublicUrlInput();
     initSlackWebhookInput();
     initLineGroupUrlInput();
+    initMenuRegSelects();
+    initAiCalendarInput();
   }else{
     showToast('⚠️ パスワードが違います');
     document.getElementById('admin-pw-input').value='';
@@ -2763,4 +2772,3 @@ checkAutoMonthlySend();
 </script>
 </body>
 </html>
-
