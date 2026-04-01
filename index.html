@@ -2046,37 +2046,29 @@ async function aiReadCalendar(){
   const mediaType=mediaTypeMatch?mediaTypeMatch[1]:'image/jpeg';
   const base64Data=aiCalendarImageBase64.split(',')[1];
 
-  // 月の初日の曜日を計算（0=日,1=月,...,6=土）
-  const firstDayOfWeek=new Date(year,month-1,1).getDay();
-  const dayNames=['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'];
-  const firstDayName=dayNames[firstDayOfWeek];
   const daysInMonth=new Date(year,month,0).getDate();
 
-  const prompt=`これは${year}年${month}月の平良商店のお弁当カレンダーです。
+  const prompt=`これは${year}年${month}月のお弁当カレンダーです。
 
-【重要】${year}年${month}月1日は${firstDayName}です。この月は${daysInMonth}日間あります。
-カレンダーの各マスに書かれている数字（日付）を正確に読み取り、その日付に対応するメニューを登録してください。
-日付を推測・計算せず、画像に印刷されている数字をそのまま読んでください。
-
-カレンダーから各日の情報を読み取り、以下のJSON形式で返してください。
+カレンダーの各マスに書かれている【数字（日付）】と【メニュー内容】だけを読み取ってください。
+曜日の判定は不要です。メニューが書かれているマスの数字とメニューをそのまま読んでください。
 
 必ず以下のJSON形式のみで返し、説明文は一切不要です：
 {
   "days": [
-    {"day": 1, "main": "料理名", "sides": ["副菜1", "副菜2", "副菜3"], "holiday": null},
-    {"day": 2, "main": null, "sides": [], "holiday": "祝日名"},
+    {"day": 7, "main": "料理名", "sides": ["副菜1", "副菜2"]},
+    {"day": 8, "main": "料理名", "sides": ["副菜1"]},
     ...
   ]
 }
 
 注意：
-- dayはカレンダーに書かれている日付の数字をそのまま使用（1〜${daysInMonth}）
-- mainは日替わり弁当のメインの料理名のみ
-- sidesは副菜のリスト（最大3つ）
-- 土曜・日曜はmain:null, sides:[], holiday:null
-- 祝日はmain:null, sides:[], holiday:"祝日名"
-- ${year}年${month}月の全日（1日〜${daysInMonth}日）を含めてください
-- 日付のずれが起きないよう、カレンダーの各マスの数字を慎重に確認してください`;
+- dayはカレンダーのマスに書かれている数字をそのまま使用（1〜${daysInMonth}の整数）
+- メニューが書かれているマスのみを出力（空白マスは出力不要）
+- mainはメインの料理名のみ
+- sidesは副菜のリスト（空の場合は[]）
+- 曜日・祝日の判定は不要（holidayフィールド不要）
+- 日付のずれが起きないよう、各マスの数字を慎重に読んでください`;
 
   if(!groqApiKey){
     status.textContent='❌ Groq APIキーが設定されていません。管理画面で設定してください。';
@@ -2121,17 +2113,14 @@ async function aiReadCalendar(){
 function renderAiResult(year,month,days){
   const list=document.getElementById('ai-result-list');
   const daysInMonth=new Date(year,month,0).getDate();
-  list.innerHTML=days.filter(d=>d.day>=1&&d.day<=daysInMonth).map(d=>{
+  list.innerHTML=days.filter(d=>d.day>=1&&d.day<=daysInMonth&&d.main).map(d=>{
     const dt=new Date(year,month-1,d.day);
-    const dowLabel=DOW[dt.getDay()];
-    if(d.holiday&&!d.main){
-      return`<div style="padding:5px 0;border-bottom:1px solid #f0f0f0;color:#C8401A;">
-        🎌 ${month}/${d.day}（${dowLabel}）${d.holiday}
-      </div>`;
-    }
-    if(!d.main){
+    const dow=dt.getDay();
+    const dowLabel=DOW[dow];
+    const isWeekend=(dow===0||dow===6);
+    if(isWeekend){
       return`<div style="padding:5px 0;border-bottom:1px solid #f0f0f0;color:#ccc;">
-        ${month}/${d.day}（${dowLabel}）休み
+        ⚠️ ${month}/${d.day}（${dowLabel}）※土日のため登録スキップ
       </div>`;
     }
     return`<div style="padding:5px 0;border-bottom:1px solid #f0f0f0;">
@@ -2148,11 +2137,13 @@ function aiRegisterAll(){
   const monthKey=`${year}-${pad(month)}`;
   if(!menuData[monthKey])menuData[monthKey]={};
   days.forEach(d=>{
-    if(d.day<1)return;
+    if(d.day<1||!d.main)return;
+    const dow=new Date(year,month-1,d.day).getDay();
+    if(dow===0||dow===6)return; // 土日はスキップ
     menuData[monthKey][d.day]={
       main:d.main||null,
       sides:d.sides||[],
-      holiday:d.holiday||null
+      holiday:null
     };
   });
   saveMenuData();
