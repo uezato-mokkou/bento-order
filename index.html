@@ -509,6 +509,8 @@ header{background:var(--primary);color:white;padding:calc(14px + env(safe-area-i
           <div style="font-size:0.74rem;color:var(--text-sub);margin-bottom:12px;line-height:1.6;">
             平良商店さんのカレンダー画像をアップするだけで、<br>全メニューを自動登録します<br><span style="color:#E53935;font-weight:700;">※ JPG・PNGのみ対応（PDF不可）</span>
           </div>
+          <!-- APIキー簡易入力エリア -->
+          <div id="ai-key-area" style="margin-bottom:12px;"></div>
           <div id="ai-upload-area" onclick="document.getElementById('ai-calendar-input').click()" style="border:2px dashed #B8CFF0;border-radius:12px;padding:18px;text-align:center;cursor:pointer;background:white;margin-bottom:10px;transition:all 0.2s;">
             <div style="font-size:1.8rem;margin-bottom:6px;">📷</div>
             <div style="font-size:0.84rem;font-weight:700;color:var(--blue);">カレンダー画像を選択</div>
@@ -1859,11 +1861,45 @@ function updateAppUrlStatus(){
   }
 }
 
+function renderAiKeyArea(){
+  const area=document.getElementById('ai-key-area');
+  if(!area)return;
+  if(groqApiKey){
+    area.innerHTML=`<div style="font-size:0.74rem;color:#2E7D32;background:#E8F5E9;border-radius:8px;padding:7px 10px;display:flex;align-items:center;justify-content:space-between;">
+      <span>✅ APIキー設定済み</span>
+      <button onclick="clearAiKeyInline()" style="font-size:0.7rem;color:#999;background:none;border:none;cursor:pointer;padding:0;">🗑️ クリア</button>
+    </div>`;
+  }else{
+    area.innerHTML=`<div style="background:#FFF3E0;border:2px solid #FF9800;border-radius:10px;padding:10px 12px;">
+      <div style="font-size:0.78rem;font-weight:700;color:#E65100;margin-bottom:6px;">⚠️ APIキーが未設定です</div>
+      <div style="font-size:0.7rem;color:#BF360C;margin-bottom:8px;">console.groq.com で無料取得した「gsk_...」のキーを入力してください</div>
+      <input id="ai-key-inline-input" type="password" placeholder="gsk_..." style="width:100%;padding:9px 12px;border:2px solid #FF9800;border-radius:8px;font-size:15px;font-family:'Noto Sans JP',sans-serif;outline:none;-webkit-appearance:none;box-sizing:border-box;margin-bottom:8px;">
+      <button onclick="saveAiKeyInline()" style="width:100%;padding:10px;background:#FF9800;color:white;border:none;border-radius:8px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">💾 APIキーを保存して使う</button>
+    </div>`;
+  }
+}
+function saveAiKeyInline(){
+  const val=(document.getElementById('ai-key-inline-input')||{}).value||'';
+  if(!val.trim()){showToast('⚠️ APIキーを入力してください');return;}
+  groqApiKey=val.trim();
+  saveGroqApiKey();
+  renderAiKeyArea();
+  initGeminiApiKeyInput();
+  showToast('✅ APIキーを保存しました');
+}
+function clearAiKeyInline(){
+  groqApiKey='';
+  saveGroqApiKey();
+  renderAiKeyArea();
+  initGeminiApiKeyInput();
+  showToast('🗑️ APIキーをクリアしました');
+}
 function initGeminiApiKeyInput(){
   const input=document.getElementById('gemini-api-key-input');
   if(input) input.value=groqApiKey;
   const status=document.getElementById('gemini-key-status');
   if(status) status.textContent=groqApiKey?'✅ APIキーが設定されています':'';
+  renderAiKeyArea();
 }
 function saveGeminiApiKeySetting(){
   const val=document.getElementById('gemini-api-key-input').value.trim();
@@ -2646,6 +2682,7 @@ if(savedVersion && savedVersion!==APP_VERSION){
 // 古いappPublicUrlを強制削除
 try{localStorage.removeItem('bento_app_public_url');}catch(e){}
 loadState();
+renderAiKeyArea();
 // AI カレンダー入力は起動時から登録
 (function(){
   const input=document.getElementById('ai-calendar-input');
