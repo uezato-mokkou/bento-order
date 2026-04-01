@@ -507,12 +507,12 @@ header{background:var(--primary);color:white;padding:calc(14px + env(safe-area-i
         <div style="background:linear-gradient(135deg,#EEF4FF,#E8F0FC);border:2px solid var(--blue);border-radius:14px;padding:14px 15px;margin-bottom:16px;">
           <div style="font-size:0.8rem;font-weight:700;color:var(--blue);margin-bottom:6px;">🤖 AIでカレンダーを自動読み取り</div>
           <div style="font-size:0.74rem;color:var(--text-sub);margin-bottom:12px;line-height:1.6;">
-            平良商店さんのカレンダー画像またはPDFをアップするだけで、<br>全メニューを自動登録します
+            平良商店さんのカレンダー画像をアップするだけで、<br>全メニューを自動登録します<br><span style="color:#E53935;font-weight:700;">※ JPG・PNGのみ対応（PDF不可）</span>
           </div>
           <div id="ai-upload-area" onclick="document.getElementById('ai-calendar-input').click()" style="border:2px dashed #B8CFF0;border-radius:12px;padding:18px;text-align:center;cursor:pointer;background:white;margin-bottom:10px;transition:all 0.2s;">
             <div style="font-size:1.8rem;margin-bottom:6px;">📷</div>
-            <div style="font-size:0.84rem;font-weight:700;color:var(--blue);">カレンダー画像・PDFを選択</div>
-            <div style="font-size:0.7rem;color:var(--text-sub);margin-top:3px;">JPG / PNG / PDF 対応</div>
+            <div style="font-size:0.84rem;font-weight:700;color:var(--blue);">カレンダー画像を選択</div>
+            <div style="font-size:0.7rem;color:var(--text-sub);margin-top:3px;">JPG / PNG のみ対応（PDF不可）</div>
           </div>
 
           <div id="ai-preview-area" style="display:none;margin-bottom:10px;">
@@ -592,7 +592,7 @@ header{background:var(--primary);color:white;padding:calc(14px + env(safe-area-i
 
 <div class="toast" id="toast"></div>
 <!-- AI カレンダー入力（常にDOM上に存在させる） -->
-<input type="file" id="ai-calendar-input" accept="image/*,application/pdf" style="display:none;position:fixed;top:-9999px;">
+<input type="file" id="ai-calendar-input" accept="image/jpeg,image/png" style="display:none;position:fixed;top:-9999px;">
 
 <script>
 // ===== SUPABASE 設定 =====
