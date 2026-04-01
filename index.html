@@ -1985,17 +1985,18 @@ function initAiCalendarInput(){
 function onAiFileSelected(e){
   const file=e.target.files[0];
   if(!file)return;
+  // PDFは非対応
+  if(file.type==='application/pdf'){
+    showToast('⚠️ PDFは非対応です。スクリーンショット（JPG/PNG）で撮影してください');
+    e.target.value='';
+    return;
+  }
   const reader=new FileReader();
   reader.onload=async ev=>{
     const base64=ev.target.result;
     aiCalendarImageBase64=base64;
-    // プレビュー表示
-    if(file.type.startsWith('image/')){
-      document.getElementById('ai-preview-img').src=base64;
-      document.getElementById('ai-preview-area').style.display='block';
-    } else {
-      document.getElementById('ai-preview-area').style.display='none';
-    }
+    document.getElementById('ai-preview-img').src=base64;
+    document.getElementById('ai-preview-area').style.display='block';
     // 年月セレクト表示
     initAiYearMonthSelect();
     document.getElementById('ai-year-month-select').style.display='block';
@@ -2045,9 +2046,19 @@ async function aiReadCalendar(){
   const mediaType=mediaTypeMatch?mediaTypeMatch[1]:'image/jpeg';
   const base64Data=aiCalendarImageBase64.split(',')[1];
 
+  // 月の初日の曜日を計算（0=日,1=月,...,6=土）
+  const firstDayOfWeek=new Date(year,month-1,1).getDay();
+  const dayNames=['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'];
+  const firstDayName=dayNames[firstDayOfWeek];
+  const daysInMonth=new Date(year,month,0).getDate();
+
   const prompt=`これは${year}年${month}月の平良商店のお弁当カレンダーです。
+
+【重要】${year}年${month}月1日は${firstDayName}です。この月は${daysInMonth}日間あります。
+カレンダーの各マスに書かれている数字（日付）を正確に読み取り、その日付に対応するメニューを登録してください。
+日付を推測・計算せず、画像に印刷されている数字をそのまま読んでください。
+
 カレンダーから各日の情報を読み取り、以下のJSON形式で返してください。
-平日（月〜金）のみ抽出し、土日・祝日はholidayフィールドに祝日名を入れてください。
 
 必ず以下のJSON形式のみで返し、説明文は一切不要です：
 {
@@ -2059,11 +2070,13 @@ async function aiReadCalendar(){
 }
 
 注意：
+- dayはカレンダーに書かれている日付の数字をそのまま使用（1〜${daysInMonth}）
 - mainは日替わり弁当のメインの料理名のみ
 - sidesは副菜のリスト（最大3つ）
-- 土日はmain:null, sides:[], holidayはnull
-- 祝日はmain:null, holiday:"祝日名"
-- ${year}年${month}月の全日を含めてください`;
+- 土曜・日曜はmain:null, sides:[], holiday:null
+- 祝日はmain:null, sides:[], holiday:"祝日名"
+- ${year}年${month}月の全日（1日〜${daysInMonth}日）を含めてください
+- 日付のずれが起きないよう、カレンダーの各マスの数字を慎重に確認してください`;
 
   if(!groqApiKey){
     status.textContent='❌ Groq APIキーが設定されていません。管理画面で設定してください。';
