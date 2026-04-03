@@ -295,7 +295,7 @@ header{background:var(--primary);color:white;padding:calc(14px + env(safe-area-i
         <div class="ss">登野城漁港内</div>
         <div class="dv"><div class="dl"></div><div class="dd"></div><div class="dl"></div></div>
         <div class="cd">土日・祝日はお休みです<br>Closed on weekends &amp; holidays</div>
-        <div class="no">🗓 次の注文受付 &nbsp;—&nbsp; <span>月曜日 12:00 〜</span></div>
+        <div class="no">🗓 次の注文受付 &nbsp;—&nbsp; <span id="next-open-label">月曜日 12:00 〜</span></div>
       </div>
     </div>
 
@@ -937,12 +937,19 @@ function isClosed(){
 // 注文対象日を返す（13時以降は翌日分）
 function orderTargetDate(){
   const d=now();
-  if(d.getHours()>=12){
-    const next=new Date(d);
-    next.setDate(next.getDate()+1);
-    return next;
-  }
-  return d;
+  const target=new Date(d);
+  if(d.getHours()>=12) target.setDate(target.getDate()+1);
+  // 土日はスキップして次の平日へ
+  while(target.getDay()===0||target.getDay()===6) target.setDate(target.getDate()+1);
+  return target;
+}
+function getNextOrderOpenLabel(){
+  const next=new Date(now());
+  next.setDate(next.getDate()+1);
+  while(next.getDay()===0||next.getDay()===6) next.setDate(next.getDate()+1);
+  const openDay=new Date(next);
+  openDay.setDate(openDay.getDate()-1);
+  return DOW[openDay.getDay()]+'曜日 12:00 〜';
 }
 function orderTargetKey(){return dateKey(orderTargetDate());}
 function orderTargetLabel(){
@@ -1077,6 +1084,8 @@ function renderTodayMenu(){
   if(notice){
     if(holiday){
       notice.classList.add('active');
+      const lbl=document.getElementById('next-open-label');
+      if(lbl) lbl.textContent=getNextOrderOpenLabel();
     } else {
       notice.classList.remove('active');
     }
