@@ -905,9 +905,13 @@ const dateKey=(d=now())=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getD
 const fmtDate=(key)=>{const[y,m,d]=key.split('-');const dt=new Date(+y,+m-1,+d);return`${+m}月${+d}日（${DOW[dt.getDay()]}）`;};
 // 今日が土日・祝日かチェック（店舗が休業かどうか）
 function isHolidayOrWeekend(){
-  // 今日が土日ならCLOSED
-  const todayDow=now().getDay();
-  if(todayDow===0||todayDow===6)return true;
+  const today=now();
+  const todayDow=today.getDay();
+  const h=today.getHours();
+  // 土曜は終日休業
+  if(todayDow===6)return true;
+  // 日曜は12時前のみ休業（12時以降は翌月曜分の注文受付可能）
+  if(todayDow===0&&h<12)return true;
   // 注文対象日（次の平日）が祝日かチェック
   const d=orderTargetDate();
   const monthKey=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
