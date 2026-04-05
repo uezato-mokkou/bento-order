@@ -1740,7 +1740,7 @@ function renderHistory(){
       ?`<div style="background:#eee;border-radius:8px;padding:6px 10px;font-size:0.7rem;color:#aaa;flex-shrink:0;">🔒 送信済み</div>`
       :`<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
           <button onclick="editOrder(${i})" style="padding:5px 12px;background:var(--blue);color:white;border:none;border-radius:8px;font-size:0.73rem;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;min-height:32px;">✏️ 編集</button>
-          <button onclick="cancelOrder(${i})" style="padding:5px 12px;background:white;color:var(--primary);border:2px solid var(--primary);border-radius:8px;font-size:0.73rem;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;min-height:32px;">🗑️ 取消</button>
+          <button onclick="confirmCancel(${i})" style="padding:5px 12px;background:white;color:var(--primary);border:2px solid var(--primary);border-radius:8px;font-size:0.73rem;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;min-height:32px;">🗑️ 取消</button>
         </div>`;
     return `<div id="history-row-${i}" style="background:#FAFAFA;border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;${orderLocked?'opacity:0.65;':''}">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
