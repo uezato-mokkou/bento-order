@@ -881,7 +881,7 @@ function loadState(){
   try{receipts=JSON.parse(localStorage.getItem('bento_receipts')||'{}');}catch(e){receipts={};}
   try{menuData=JSON.parse(localStorage.getItem('bento_menu_data')||'{}');}catch(e){menuData={};}
   lineGroupUrl=localStorage.getItem('bento_line_group_url')||lineGroupUrl;
-  const lockedKey='order_locked_'+dateKey();
+  const lockedKey='order_locked_'+orderTargetKey();
   orderLocked=localStorage.getItem(lockedKey)==='1';
   slackWebhookUrl=localStorage.getItem('bento_slack_webhook')||'';
   console.log('Slack URL loaded:', slackWebhookUrl?'設定済み':'未設定');
@@ -1241,8 +1241,9 @@ function submitAllOrders(){
   if(!cart.length){showToast('⚠️ カートが空です');return;}
   if(isClosed()){showToast('⏰ 8:35〜13:00は受付時間外です');return;}
   const t=now().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+  const targetDate=orderTargetKey();
   cart.forEach(c=>{
-    orders.push({...c,time:t,date:dateKey()});
+    orders.push({...c,time:t,date:targetDate});
   });
   saveOrders();updateBadge();
   showToast(`✅ ${cart.length}件の注文を確定しました！`);
@@ -1253,7 +1254,8 @@ function submitAllOrders(){
 // ===== ARCHIVE / RESET =====
 function archiveTodayOrders(){
   if(!orders.length)return;
-  const key=orderTargetKey();
+  // 注文データに記録されている実際の日付を使う（orderTargetKeyではなく）
+  const key=orders[0].date||orderTargetKey();
   const agg={};let total=0;
   orders.forEach(o=>{
     const k=`${o.bentoId}-${o.oomori?1:0}`;
@@ -1270,7 +1272,7 @@ function resetDailyOrders(){
   if(!confirm('本日の注文をリセットしますか？\n（月次集計用に記録は自動保存されます）'))return;
   archiveTodayOrders();
   orders=[];saveOrders();cart=[];renderCart();updateBadge();renderSummary();
-  orderLocked=false;localStorage.removeItem('order_locked_'+dateKey());
+  orderLocked=false;localStorage.removeItem('order_locked_'+orderTargetKey());
   showToast('✅ リセットしました（月次記録に保存済み）');
 }
 
@@ -1323,15 +1325,16 @@ function sendToLine(){
   if(!orders.length){showToast('注文がありません');return;}
   const msg=buildLineMsg();
   // Slackに同時送信（設定済みの場合）
-  // localStorageから再読み込みして確実に送信
   const savedSlack=localStorage.getItem('bento_slack_webhook')||'';
   if(savedSlack) slackWebhookUrl=savedSlack;
   sendToSlack(msg);
   // LINE URL方式で送信（メッセージが入力済み状態で開く）
   window.open('https://line.me/R/msg/text/?'+encodeURIComponent(msg),'_blank');
-  // 送信後にロック
+  // 月次に保存
+  archiveTodayOrders();
+  // 送信後にロック（配達日のキーでロック）
   orderLocked=true;
-  localStorage.setItem('order_locked_'+dateKey(),'1');
+  localStorage.setItem('order_locked_'+orderTargetKey(),'1');
   renderHistory();
 }
 
