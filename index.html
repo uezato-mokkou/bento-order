@@ -928,13 +928,19 @@ function isHolidayOrWeekend(){
 
 function isOpen(){
   const d=now(),h=d.getHours(),m=d.getMinutes();
-  // 12:00〜23:59 または 0:00〜8:59 は注文可能
-  return h>=12 || h<9;
+  // 12:00〜翌8:34は注文可能
+  return h>=12 || h<8 || (h===8&&m<35);
 }
 function isClosed(){
   const d=now(),h=d.getHours(),m=d.getMinutes();
-  // 9:00〜11:59 は受付時間外
-  return h>=9&&h<12;
+  // 8:35〜11:59は受付時間外（締切済み）
+  return (h===8&&m>=35)||(h>=9&&h<12);
+}
+function isHistoryLocked(){
+  if(orderLocked) return true;
+  // 8:35〜11:59は自動ロック（当日受付締切後）
+  const d=now(),h=d.getHours(),m=d.getMinutes();
+  return (h===8&&m>=35)||(h>=9&&h<12);
 }
 // 注文対象日を返す（13時以降は翌日分）
 function orderTargetDate(){
@@ -1735,17 +1741,18 @@ function renderHistory(){
     return;
   }
   const targetDateStr=orderTargetDate().toLocaleDateString('ja-JP',{month:'long',day:'numeric',weekday:'short'});
-  const lockNotice=orderLocked
-    ?`<div style="background:#FFF0EE;border:2px solid var(--primary);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:0.82rem;color:var(--primary);font-weight:700;display:flex;align-items:center;gap:8px;"><span>🔒</span>LINEで送信済みのため、編集・取消はできません</div>`
+  const locked=isHistoryLocked();
+  const lockNotice=locked
+    ?`<div style="background:#FFF0EE;border:2px solid var(--primary);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:0.82rem;color:var(--primary);font-weight:700;display:flex;align-items:center;gap:8px;"><span>🔒</span>${orderLocked?'LINEで送信済みのため':'8:35を過ぎたため'}、編集・取消はできません</div>`
     :`<div style="background:#F0FFF5;border:2px solid var(--green);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:0.82rem;color:var(--accent2);font-weight:700;display:flex;align-items:center;gap:8px;"><span>✏️</span>LINEで送信する前は編集・取消が可能です</div>`;
   const rows=orders.map((o,i)=>{
-    const btnArea=orderLocked
-      ?`<div style="background:#eee;border-radius:8px;padding:6px 10px;font-size:0.7rem;color:#aaa;flex-shrink:0;">🔒 送信済み</div>`
+    const btnArea=locked
+      ?`<div style="background:#eee;border-radius:8px;padding:6px 10px;font-size:0.7rem;color:#aaa;flex-shrink:0;">🔒 ロック中</div>`
       :`<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
           <button onclick="editOrder(${i})" style="padding:5px 12px;background:var(--blue);color:white;border:none;border-radius:8px;font-size:0.73rem;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;min-height:32px;">✏️ 編集</button>
           <button onclick="confirmCancel(${i})" style="padding:5px 12px;background:white;color:var(--primary);border:2px solid var(--primary);border-radius:8px;font-size:0.73rem;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;min-height:32px;">🗑️ 取消</button>
         </div>`;
-    return `<div id="history-row-${i}" style="background:#FAFAFA;border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;${orderLocked?'opacity:0.65;':''}">
+    return `<div id="history-row-${i}" style="background:#FAFAFA;border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;${locked?'opacity:0.65;':''}">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
         <div style="flex:1;">
           <div style="font-weight:700;font-size:0.9rem;">${o.name}</div>
