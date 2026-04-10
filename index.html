@@ -441,7 +441,13 @@ header{background:var(--primary);color:white;padding:calc(14px + env(safe-area-i
         <div id="admin-today-orders" style="margin-bottom:12px;max-height:280px;overflow-y:auto;"></div>
         <div style="border-top:1px solid var(--border);padding-top:12px;">
           <div style="font-size:0.75rem;font-weight:700;color:var(--text-sub);margin-bottom:8px;">＋ 注文を追加</div>
-          <input id="admin-add-name" type="text" placeholder="お名前" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;margin-bottom:8px;-webkit-appearance:none;box-sizing:border-box;">
+          <div class="name-search-box" style="margin-bottom:8px;">
+            <input class="name-search-input" id="admin-add-name" type="text"
+              placeholder="お名前（名前 or フリガナで検索...）"
+              autocomplete="off" oninput="onAdminNameInput()" onfocus="onAdminNameFocus()" onblur="onAdminNameBlur()" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;-webkit-appearance:none;box-sizing:border-box;">
+            <button class="name-search-clear" onclick="clearAdminNameInput()" tabindex="-1" style="height:44px;top:2px;">✕</button>
+            <div class="name-dropdown" id="admin-name-dropdown"></div>
+          </div>
           <select id="admin-add-bento" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;background:white;outline:none;-webkit-appearance:none;margin-bottom:8px;box-sizing:border-box;">
           </select>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
@@ -2495,7 +2501,7 @@ async function adminAddOrder(){
     btn.style.background = 'linear-gradient(135deg,#E8A000,#C87800)';
   }
   
-  await renderAdminOrders();
+  await refreshAdminState();
 }
 
 async function adminDeleteOrder(orderId){
@@ -2503,8 +2509,76 @@ async function adminDeleteOrder(orderId){
   await deleteOrderFromCloud(orderId);
   orders=orders.filter(o=>o.id!==orderId&&o.cloud_id!==orderId);
   saveOrders();updateBadge();
-  await renderAdminOrders();
+  await refreshAdminState();
   showToast('🗑️ 注文を削除しました');
+}
+
+async function refreshAdminState() {
+  const targetKey = orderTargetKey();
+  if (dailyHistory[targetKey]) {
+    if (orders.length > 0) {
+      archiveTodayOrders();
+    } else {
+      delete dailyHistory[targetKey];
+      saveDailyHistory();
+      saveDailyHistoryToCloud(targetKey, {orders:[], total:0, summary:[], count:0});
+    }
+  }
+  await renderAdminOrders();
+  renderAdminSummary();
+  if(typeof renderSummary === 'function') renderSummary();
+  if(typeof renderMonthly === 'function') renderMonthly();
+  if(typeof renderHistory === 'function') renderHistory();
+}
+
+// ===== ADMIN NAME SEARCH =====
+function onAdminNameInput(){
+  const q=document.getElementById('admin-add-name').value.trim();
+  showAdminNameDropdown(q);
+}
+function onAdminNameFocus(){
+  const q=document.getElementById('admin-add-name').value.trim();
+  showAdminNameDropdown(q);
+}
+function onAdminNameBlur(){
+  setTimeout(()=>{
+    const dd=document.getElementById('admin-name-dropdown');
+    if(dd) dd.classList.remove('open');
+  },200);
+}
+function showAdminNameDropdown(q){
+  const dd=document.getElementById('admin-name-dropdown');
+  if(!dd)return;
+  let filtered;
+  if(!q){
+    filtered=EMPLOYEES;
+  }else{
+    const lq=q.toLowerCase().replace(/\s/g,'');
+    filtered=EMPLOYEES.filter(e=>{
+      const nameClean=e.name.replace(/\s/g,'').toLowerCase();
+      const kanaClean=e.kana.replace(/\s/g,'').toLowerCase();
+      const kanaHira=e.kana.replace(/[\u30A1-\u30F6]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60)).replace(/\s/g,'').toLowerCase();
+      return nameClean.includes(lq)||kanaClean.includes(lq)||kanaHira.includes(lq);
+    });
+  }
+  if(!filtered.length&&q){
+    dd.innerHTML=`<div class="name-option" onmousedown="selectAdminName('${q.replace(/'/g,"\\'")}')"><span>「${escapeHtml(q)}」を直接入力</span></div>`;
+  }else{
+    dd.innerHTML=filtered.map(e=>`
+      <div class="name-option" onmousedown="selectAdminName('${e.name.replace(/'/g,"\\'")}')">
+        <span>${e.name}</span><span class="furigana">${e.kana}</span>
+      </div>`).join('');
+  }
+  dd.classList.add('open');
+}
+function selectAdminName(name){
+  document.getElementById('admin-add-name').value=name;
+  document.getElementById('admin-name-dropdown').classList.remove('open');
+}
+function clearAdminNameInput(){
+  document.getElementById('admin-add-name').value='';
+  onAdminNameInput();
+  document.getElementById('admin-add-name').focus();
 }
 
 // ===== ADMIN =====
