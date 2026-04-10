@@ -433,68 +433,23 @@ header{background:var(--primary);color:white;padding:calc(14px + env(safe-area-i
         <select class="month-select" id="admin-month-select" onchange="renderAdminSummary()" style="width:100%;margin-bottom:14px;"></select>
         <div id="admin-name-summary"></div>
       </div>
-      <!-- Groq APIキー設定 -->
-      <div style="background:#EEF4FF;border:2px solid var(--blue);border-radius:14px;padding:14px 15px;margin-bottom:14px;">
-        <div style="font-size:0.8rem;font-weight:700;color:var(--blue);margin-bottom:6px;">🤖 Groq APIキー設定（無料）</div>
-        <div style="font-size:0.74rem;color:var(--text-sub);line-height:1.6;margin-bottom:10px;">
-          console.groq.com で取得した無料のAPIキーを設定してください。<br>
-          カレンダー自動読み取り機能に使用します。
-        </div>
-        <input id="gemini-api-key-input" type="password" placeholder="gsk_..." style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;-webkit-appearance:none;margin-bottom:8px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <button onclick="saveGeminiApiKeySetting()" style="padding:11px;background:var(--blue);color:white;border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">💾 保存</button>
-          <button onclick="clearGeminiApiKey()" style="padding:11px;background:white;color:var(--text-sub);border:2px solid var(--border);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">🗑️ クリア</button>
-        </div>
-        <div id="gemini-key-status" style="margin-top:8px;font-size:0.76rem;text-align:center;"></div>
-      </div>
 
-      <!-- Slack Webhook設定 -->
-      <div style="background:#F8F0FF;border:2px solid #6B3FA0;border-radius:14px;padding:14px 15px;margin-bottom:14px;">
-        <div style="font-size:0.8rem;font-weight:700;color:#6B3FA0;margin-bottom:6px;">
-          <svg style="width:16px;height:16px;vertical-align:middle;margin-right:4px;" viewBox="0 0 24 24" fill="#6B3FA0"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zm1.271 0a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zm0 1.271a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zm10.122 2.521a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zm-1.268 0a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zm-2.523 10.122a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zm0-1.268a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/></svg>
-          Slack 自動通知設定
+      <!-- 当日注文の編集・追加 -->
+      <div style="background:#FFF8E8;border:2px solid #E8A000;border-radius:14px;padding:14px 15px;margin-bottom:14px;">
+        <div style="font-size:0.8rem;font-weight:700;color:#B87800;margin-bottom:4px;">📝 当日注文の編集・追加</div>
+        <div style="font-size:0.72rem;color:var(--text-sub);margin-bottom:10px;">8:35以降でも管理者は注文の追加・削除が可能です</div>
+        <div id="admin-today-orders" style="margin-bottom:12px;max-height:280px;overflow-y:auto;"></div>
+        <div style="border-top:1px solid var(--border);padding-top:12px;">
+          <div style="font-size:0.75rem;font-weight:700;color:var(--text-sub);margin-bottom:8px;">＋ 注文を追加</div>
+          <input id="admin-add-name" type="text" placeholder="お名前" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;margin-bottom:8px;-webkit-appearance:none;box-sizing:border-box;">
+          <select id="admin-add-bento" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;background:white;outline:none;-webkit-appearance:none;margin-bottom:8px;box-sizing:border-box;">
+          </select>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+            <button id="admin-oomori-no" onclick="adminSetOomori(false)" style="padding:11px;background:var(--primary);color:white;border:2px solid var(--primary);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">普通盛り ¥650</button>
+            <button id="admin-oomori-yes" onclick="adminSetOomori(true)" style="padding:11px;background:white;color:var(--text-sub);border:2px solid var(--border);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">大盛り ¥700</button>
+          </div>
+          <button id="admin-add-btn" onclick="adminAddOrder()" style="width:100%;padding:13px;background:linear-gradient(135deg,#E8A000,#C87800);color:white;border:none;border-radius:13px;font-family:'Kaisei Decol',serif;font-size:0.95rem;font-weight:700;cursor:pointer;min-height:50px;">＋ 追加する</button>
         </div>
-        <div style="font-size:0.74rem;color:var(--text-sub);line-height:1.6;margin-bottom:10px;">
-          Webhook URLを設定すると、LINEと同時にSlackにも自動送信されます。<br>
-          注文・月次どちらも対応しています。
-        </div>
-        <input id="slack-webhook-input" type="url" placeholder="https://hooks.slack.com/services/..." style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;-webkit-appearance:none;margin-bottom:8px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-          <button onclick="saveSlackWebhookSetting()" style="padding:11px;background:#6B3FA0;color:white;border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">💾 保存</button>
-          <button onclick="testSlackWebhook()" style="padding:11px;background:white;color:#6B3FA0;border:2px solid #6B3FA0;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">🧪 テスト送信</button>
-        </div>
-        <button onclick="clearSlackWebhook()" style="width:100%;padding:9px;background:white;color:var(--text-sub);border:2px solid var(--border);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;min-height:40px;">🗑️ クリア</button>
-        <div id="slack-status" style="margin-top:8px;font-size:0.76rem;text-align:center;"></div>
-      </div>
-
-      <!-- アプリ公開URL設定 -->
-      <div style="background:#FFF8E8;border:2px solid var(--accent);border-radius:14px;padding:14px 15px;margin-bottom:14px;">
-        <div style="font-size:0.8rem;font-weight:700;color:#B87800;margin-bottom:6px;">🌐 アプリ公開URL設定</div>
-        <div style="font-size:0.74rem;color:var(--text-sub);line-height:1.6;margin-bottom:10px;">
-          GitHub PagesなどでアプリをURLで公開した場合に設定してください。<br>
-          月次LINEメッセージに納品書確認リンクとして自動で追加されます。
-        </div>
-        <input id="app-public-url-input" type="url" placeholder="https://あなたのID.github.io/bento-order/" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;-webkit-appearance:none;margin-bottom:8px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <button onclick="saveAppPublicUrlSetting()" style="padding:11px;background:var(--accent);color:white;border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">💾 保存</button>
-          <button onclick="clearAppPublicUrl()" style="padding:11px;background:white;color:var(--text-sub);border:2px solid var(--border);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">🗑️ クリア</button>
-        </div>
-        <div id="app-url-status" style="margin-top:8px;font-size:0.76rem;text-align:center;"></div>
-      </div>
-
-      <!-- LINE グループURL設定 -->
-      <div style="background:#F0FFF5;border:2px solid var(--green);border-radius:14px;padding:14px 15px;margin-bottom:14px;">
-        <div style="font-size:0.8rem;font-weight:700;color:var(--accent2);margin-bottom:6px;">💬 LINEグループURL設定</div>
-        <div style="font-size:0.74rem;color:var(--text-sub);line-height:1.6;margin-bottom:10px;">
-          グループURLを設定すると、注文内容が自動コピーされてグループが開きます。<br>
-          あとは貼り付けて送信ボタンを押すだけ！
-        </div>
-        <input id="line-group-url-input" type="url" placeholder="https://line.me/R/ti/g/..." style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;-webkit-appearance:none;margin-bottom:8px;" value="">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <button onclick="saveLineGroupUrlSetting()" style="padding:11px;background:var(--green);color:white;border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">💾 保存</button>
-          <button onclick="clearLineGroupUrl()" style="padding:11px;background:white;color:var(--text-sub);border:2px solid var(--border);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">🗑️ クリア</button>
-        </div>
-        <div id="line-group-status" style="margin-top:8px;font-size:0.76rem;text-align:center;"></div>
       </div>
 
       <button class="csv-btn" onclick="exportCSV()">📥 CSVエクスポート（○○月弁当注文集計）</button>
@@ -551,6 +506,70 @@ header{background:var(--primary);color:white;padding:calc(14px + env(safe-area-i
           <div style="font-size:0.78rem;font-weight:700;color:var(--text-sub);margin-bottom:8px;">登録済みメニュー一覧</div>
           <div id="menu-reg-list"></div>
         </div>
+      </div>
+
+      <!-- Slack Webhook設定 -->
+      <div style="background:#F8F0FF;border:2px solid #6B3FA0;border-radius:14px;padding:14px 15px;margin-bottom:14px;">
+        <div style="font-size:0.8rem;font-weight:700;color:#6B3FA0;margin-bottom:6px;">
+          <svg style="width:16px;height:16px;vertical-align:middle;margin-right:4px;" viewBox="0 0 24 24" fill="#6B3FA0"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zm1.271 0a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zm0 1.271a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zm10.122 2.521a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zm-1.268 0a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zm-2.523 10.122a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zm0-1.268a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/></svg>
+          Slack 自動通知設定
+        </div>
+        <div style="font-size:0.74rem;color:var(--text-sub);line-height:1.6;margin-bottom:10px;">
+          Webhook URLを設定すると、LINEと同時にSlackにも自動送信されます。<br>
+          注文・月次どちらも対応しています。
+        </div>
+        <input id="slack-webhook-input" type="url" placeholder="https://hooks.slack.com/services/..." style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;-webkit-appearance:none;margin-bottom:8px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <button onclick="saveSlackWebhookSetting()" style="padding:11px;background:#6B3FA0;color:white;border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">💾 保存</button>
+          <button onclick="testSlackWebhook()" style="padding:11px;background:white;color:#6B3FA0;border:2px solid #6B3FA0;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">🧪 テスト送信</button>
+        </div>
+        <button onclick="clearSlackWebhook()" style="width:100%;padding:9px;background:white;color:var(--text-sub);border:2px solid var(--border);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;min-height:40px;">🗑️ クリア</button>
+        <div id="slack-status" style="margin-top:8px;font-size:0.76rem;text-align:center;"></div>
+      </div>
+
+      <!-- LINE グループURL設定 -->
+      <div style="background:#F0FFF5;border:2px solid var(--green);border-radius:14px;padding:14px 15px;margin-bottom:14px;">
+        <div style="font-size:0.8rem;font-weight:700;color:var(--accent2);margin-bottom:6px;">💬 LINEグループURL設定</div>
+        <div style="font-size:0.74rem;color:var(--text-sub);line-height:1.6;margin-bottom:10px;">
+          グループURLを設定すると、注文内容が自動コピーされてグループが開きます。<br>
+          あとは貼り付けて送信ボタンを押すだけ！
+        </div>
+        <input id="line-group-url-input" type="url" placeholder="https://line.me/R/ti/g/..." style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;-webkit-appearance:none;margin-bottom:8px;" value="">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button onclick="saveLineGroupUrlSetting()" style="padding:11px;background:var(--green);color:white;border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">💾 保存</button>
+          <button onclick="clearLineGroupUrl()" style="padding:11px;background:white;color:var(--text-sub);border:2px solid var(--border);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">🗑️ クリア</button>
+        </div>
+        <div id="line-group-status" style="margin-top:8px;font-size:0.76rem;text-align:center;"></div>
+      </div>
+
+      <!-- アプリ公開URL設定 -->
+      <div style="background:#FFF8E8;border:2px solid var(--accent);border-radius:14px;padding:14px 15px;margin-bottom:14px;">
+        <div style="font-size:0.8rem;font-weight:700;color:#B87800;margin-bottom:6px;">🌐 アプリ公開URL設定</div>
+        <div style="font-size:0.74rem;color:var(--text-sub);line-height:1.6;margin-bottom:10px;">
+          GitHub PagesなどでアプリをURLで公開した場合に設定してください。<br>
+          月次LINEメッセージに納品書確認リンクとして自動で追加されます。
+        </div>
+        <input id="app-public-url-input" type="url" placeholder="https://あなたのID.github.io/bento-order/" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;-webkit-appearance:none;margin-bottom:8px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button onclick="saveAppPublicUrlSetting()" style="padding:11px;background:var(--accent);color:white;border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">💾 保存</button>
+          <button onclick="clearAppPublicUrl()" style="padding:11px;background:white;color:var(--text-sub);border:2px solid var(--border);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">🗑️ クリア</button>
+        </div>
+        <div id="app-url-status" style="margin-top:8px;font-size:0.76rem;text-align:center;"></div>
+      </div>
+
+      <!-- Groq APIキー設定 -->
+      <div style="background:#EEF4FF;border:2px solid var(--blue);border-radius:14px;padding:14px 15px;margin-bottom:14px;">
+        <div style="font-size:0.8rem;font-weight:700;color:var(--blue);margin-bottom:6px;">🤖 Groq APIキー設定（無料）</div>
+        <div style="font-size:0.74rem;color:var(--text-sub);line-height:1.6;margin-bottom:10px;">
+          console.groq.com で取得した無料のAPIキーを設定してください。<br>
+          カレンダー自動読み取り機能に使用します。
+        </div>
+        <input id="gemini-api-key-input" type="password" placeholder="gsk_..." style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;-webkit-appearance:none;margin-bottom:8px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button onclick="saveGeminiApiKeySetting()" style="padding:11px;background:var(--blue);color:white;border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">💾 保存</button>
+          <button onclick="clearGeminiApiKey()" style="padding:11px;background:white;color:var(--text-sub);border:2px solid var(--border);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">🗑️ クリア</button>
+        </div>
+        <div id="gemini-key-status" style="margin-top:8px;font-size:0.76rem;text-align:center;"></div>
       </div>
 
       <button class="reset-btn" onclick="adminResetAll()" style="border-color:#C8401A;color:#C8401A;margin-top:16px;">⚠️ 全データをリセット</button>
@@ -2365,6 +2384,129 @@ function renderMenuList(){
   }).join('');
 }
 
+// ===== 管理者 当日注文管理 =====
+let adminOomori=false;
+
+function adminSetOomori(val){
+  adminOomori=val;
+  const no=document.getElementById('admin-oomori-no');
+  const yes=document.getElementById('admin-oomori-yes');
+  if(!no||!yes)return;
+  no.style.background=val?'white':'var(--primary)';
+  no.style.color=val?'var(--text-sub)':'white';
+  no.style.border=val?'2px solid var(--border)':'2px solid var(--primary)';
+  yes.style.background=val?'var(--primary)':'white';
+  yes.style.color=val?'white':'var(--text-sub)';
+  yes.style.border=val?'2px solid var(--primary)':'2px solid var(--border)';
+}
+
+async function renderAdminOrders(){
+  const container=document.getElementById('admin-today-orders');
+  if(!container)return;
+  const targetKey=orderTargetKey();
+  container.innerHTML='<div style="font-size:0.78rem;color:var(--text-sub);text-align:center;padding:8px;">読み込み中...</div>';
+  const cloudOrders=await loadOrdersFromCloud(targetKey);
+  if(!cloudOrders.length){
+    container.innerHTML='<div style="font-size:0.8rem;color:var(--text-sub);text-align:center;padding:12px;">現在の注文はありません</div>';
+    return;
+  }
+  container.innerHTML=cloudOrders.map(o=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:0.8rem;background:white;">
+      <div style="flex:1;">
+        <span style="font-weight:700;">${escapeHtml(o.name)}</span>
+        <span style="color:var(--text-sub);margin-left:6px;">${o.emoji}${o.bentoName}（${o.oomori?'大盛り':'普通盛り'}）¥${o.price}</span>
+      </div>
+      <div style="display:flex;gap:4px;">
+        <button onclick="adminStartEditOrder('${o.cloud_id}', '${escapeHtml(o.name).replace(/'/g, "\\'")}', ${o.bentoId}, ${o.oomori})" style="padding:4px 8px;background:white;color:#2D6A4F;border:1.5px solid #2D6A4F;border-radius:6px;font-size:0.72rem;cursor:pointer;font-family:'Noto Sans JP',sans-serif;">✏️ 編集</button>
+        <button onclick="adminDeleteOrder('${o.cloud_id}')" style="padding:4px 8px;background:white;color:var(--primary);border:1.5px solid var(--primary);border-radius:6px;font-size:0.72rem;cursor:pointer;font-family:'Noto Sans JP',sans-serif;">🗑️ 削除</button>
+      </div>
+    </div>
+  `).join('')+`<div style="font-size:0.78rem;color:var(--text-sub);text-align:right;margin-top:4px;">計 ${cloudOrders.length}件</div>`;
+  // Populate bento select
+  const sel=document.getElementById('admin-add-bento');
+  if(sel&&!sel.options.length){
+    BENTOS.forEach(b=>{const opt=document.createElement('option');opt.value=b.id;opt.textContent=b.emoji+' '+b.name+' ¥'+(b.price);sel.appendChild(opt);});
+  }
+}
+
+let adminEditingCloudId = null;
+
+function adminStartEditOrder(cloudId, name, bentoId, oomori) {
+  adminEditingCloudId = cloudId;
+  const nameEl = document.getElementById('admin-add-name');
+  if(nameEl) nameEl.value = name;
+  const bentoEl = document.getElementById('admin-add-bento');
+  if(bentoEl) bentoEl.value = bentoId;
+  adminSetOomori(oomori);
+  
+  const btn = document.getElementById('admin-add-btn');
+  if(btn) {
+    btn.innerHTML = '✏️ 更新する';
+    btn.style.background = 'linear-gradient(135deg,#2D6A4F,#3D8A6F)';
+  }
+}
+
+async function adminAddOrder(){
+  const nameEl=document.getElementById('admin-add-name');
+  const bentoEl=document.getElementById('admin-add-bento');
+  const name=(nameEl?.value||'').trim();
+  const bentoId=parseInt(bentoEl?.value||'1');
+  const bento=BENTOS.find(b=>b.id===bentoId);
+  if(!name){showToast('⚠️ お名前を入力してください');return;}
+  if(!bento){showToast('⚠️ 弁当を選択してください');return;}
+  const t=now().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+  const order={name,bentoId:bento.id,bentoName:bento.name,emoji:bento.emoji,oomori:adminOomori,price:bento.price+(adminOomori?OOMORI:0),time:t,date:orderTargetKey()};
+  
+  if (adminEditingCloudId) {
+    try {
+      await sbFetch(`orders?id=eq.${adminEditingCloudId}`, 'PATCH', {
+        name: order.name,
+        bento_id: order.bentoId,
+        bento_name: order.bentoName,
+        emoji: order.emoji,
+        oomori: order.oomori,
+        price: order.price,
+        time: order.time
+      });
+      const idx = orders.findIndex(o => o.cloud_id === adminEditingCloudId);
+      if (idx >= 0) {
+        orders[idx] = { ...orders[idx], ...order };
+      }
+      showToast(`✅ ${name}さんの注文を更新しました`);
+    } catch(e) {
+      console.error('更新エラー:', e);
+      showToast('⚠️ 更新に失敗しました');
+    }
+  } else {
+    await saveOrderToCloud(order);
+    orders.push(order);
+    showToast(`✅ ${name}さんの注文を追加しました`);
+  }
+  
+  adminEditingCloudId = null;
+  saveOrders();
+  updateBadge();
+  if(nameEl)nameEl.value='';
+  adminSetOomori(false);
+  
+  const btn = document.getElementById('admin-add-btn');
+  if(btn) {
+    btn.innerHTML = '＋ 追加する';
+    btn.style.background = 'linear-gradient(135deg,#E8A000,#C87800)';
+  }
+  
+  await renderAdminOrders();
+}
+
+async function adminDeleteOrder(orderId){
+  if(!confirm('この注文を削除しますか？'))return;
+  await deleteOrderFromCloud(orderId);
+  orders=orders.filter(o=>o.id!==orderId&&o.cloud_id!==orderId);
+  saveOrders();updateBadge();
+  await renderAdminOrders();
+  showToast('🗑️ 注文を削除しました');
+}
+
 // ===== ADMIN =====
 function adminUnlock(){
   const pw=document.getElementById('admin-pw-input').value;
@@ -2380,6 +2522,7 @@ function adminUnlock(){
     initLineGroupUrlInput();
     initMenuRegSelects();
     initAiCalendarInput();
+    renderAdminOrders();
   }else{
     showToast('⚠️ パスワードが違います');
     document.getElementById('admin-pw-input').value='';
