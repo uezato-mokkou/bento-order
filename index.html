@@ -1283,25 +1283,28 @@ function submitAllOrders(){
 }
 
 // ===== ARCHIVE / RESET =====
-function archiveTodayOrders(){
-  if(!orders.length)return;
-  // 注文データに記録されている実際の日付を使う（orderTargetKeyではなく）
-  const key=orders[0].date||orderTargetKey();
+async function archiveTodayOrders(){
+  // アーカイブするキーを決定（ローカルに注文があればその日付、なければorderTargetKey）
+  const key=(orders.length?orders[0].date:null)||orderTargetKey();
+  // クラウドから当日の全注文を取得（他デバイスからの注文も含む）
+  let sourceOrders=await loadOrdersFromCloud(key);
+  if(!sourceOrders.length) sourceOrders=[...orders];
+  if(!sourceOrders.length) return;
   const agg={};let total=0;
-  orders.forEach(o=>{
+  sourceOrders.forEach(o=>{
     const k=`${o.bentoId}-${o.oomori?1:0}`;
     if(!agg[k])agg[k]={bentoName:o.bentoName,emoji:o.emoji,oomori:o.oomori,price:o.price,count:0};
     agg[k].count++;total+=o.price;
   });
-  const entry={orders:[...orders],total,summary:Object.values(agg),count:orders.length};
+  const entry={orders:[...sourceOrders],total,summary:Object.values(agg),count:sourceOrders.length};
   dailyHistory[key]=entry;
   saveDailyHistory();
   // クラウドにも保存
-  saveDailyHistoryToCloud(key, entry);
+  await saveDailyHistoryToCloud(key, entry);
 }
-function resetDailyOrders(){
+async function resetDailyOrders(){
   if(!confirm('本日の注文をリセットしますか？\n（月次集計用に記録は自動保存されます）'))return;
-  archiveTodayOrders();
+  await archiveTodayOrders();
   orders=[];saveOrders();cart=[];renderCart();updateBadge();renderSummary();
   orderLocked=false;localStorage.removeItem('order_locked_'+orderTargetKey());
   showToast('✅ リセットしました（月次記録に保存済み）');
@@ -1352,7 +1355,7 @@ async function renderSummary(){
       ${pRows}
     </div>`;
 }
-function sendToLine(){
+async function sendToLine(){
   if(!orders.length){showToast('注文がありません');return;}
   const msg=buildLineMsg();
   // Slackに同時送信（設定済みの場合）
@@ -1361,8 +1364,8 @@ function sendToLine(){
   sendToSlack(msg);
   // LINE URL方式で送信（メッセージが入力済み状態で開く）
   window.open('https://line.me/R/msg/text/?'+encodeURIComponent(msg),'_blank');
-  // 月次に保存
-  archiveTodayOrders();
+  // 月次に保存（クラウドから全注文を取得してから保存）
+  await archiveTodayOrders();
   // 送信後にロック（配達日のキーでロック）
   orderLocked=true;
   localStorage.setItem('order_locked_'+orderTargetKey(),'1');
@@ -2517,7 +2520,7 @@ async function refreshAdminState() {
   const targetKey = orderTargetKey();
   if (dailyHistory[targetKey]) {
     if (orders.length > 0) {
-      archiveTodayOrders();
+      await archiveTodayOrders();
     } else {
       delete dailyHistory[targetKey];
       saveDailyHistory();
@@ -2814,7 +2817,7 @@ function clearTestData(){
 }
 
 // ===== AUTO DAILY RESET AT 12:00 =====
-function checkAutoDailyReset(){
+async function checkAutoDailyReset(){
   if(!orders.length)return;
   const d=now();
   const h=d.getHours(),m=d.getMinutes();
@@ -2823,13 +2826,8 @@ function checkAutoDailyReset(){
     const resetKey='daily_reset_'+dateKey();
     if(localStorage.getItem(resetKey)==='1')return;
     localStorage.setItem(resetKey,'1');
-    // 月次に保存してリセット
-    archiveTodayOrders();
-    // Supabaseにも保存
-    const key=orderTargetKey();
-    if(dailyHistory[key]){
-      saveDailyHistoryToCloud(key, dailyHistory[key]);
-    }
+    // 月次に保存してリセット（クラウドから全注文取得）
+    await archiveTodayOrders();
     orders=[];saveOrders();
     cart=[];renderCart();
     updateBadge();
@@ -2846,7 +2844,7 @@ function getLastWeekdayOfMonth(year,month){
   while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()-1);
   return d;
 }
-function checkAutoMonthlySend(){
+async function checkAutoMonthlySend(){
   const d=now();const h=d.getHours(),m=d.getMinutes();
   if(h!==9||m!==20)return;
   const lastWeekday=getLastWeekdayOfMonth(d.getFullYear(),d.getMonth());
@@ -2854,7 +2852,7 @@ function checkAutoMonthlySend(){
   const sentKey=`monthly_sent_${d.getFullYear()}-${pad(d.getMonth()+1)}`;
   if(localStorage.getItem(sentKey)==='1')return;
   localStorage.setItem(sentKey,'1');
-  archiveTodayOrders();
+  await archiveTodayOrders();
   const sel=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
   const{keys:allKeys,hasCurrentOrders,todayKey}=getMonthKeys(sel);
   if(!allKeys.length)return;
