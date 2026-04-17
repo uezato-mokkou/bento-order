@@ -301,6 +301,18 @@ header{background:var(--primary);color:white;padding:calc(14px + env(safe-area-i
 
     <!-- 通常の注文フォーム -->
     <div id="order-form-area">
+
+      <!-- 注文済みバナー -->
+      <div id="order-status-banner" style="display:none;background:linear-gradient(135deg,#1a7a3a 0%,#22a44f 100%);border-radius:16px;padding:18px 20px;margin-bottom:18px;color:#fff;display:none;align-items:center;gap:16px;box-shadow:0 4px 18px rgba(26,122,58,0.35);position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;background:rgba(255,255,255,0.08);border-radius:50%;pointer-events:none;"></div>
+        <div style="font-size:2.4rem;line-height:1;flex-shrink:0;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));">✅</div>
+        <div style="flex:1;">
+          <div id="order-status-name" style="font-size:0.78rem;opacity:0.9;margin-bottom:2px;font-weight:500;"></div>
+          <div style="font-family:'Kaisei Decol',serif;font-size:1.05rem;font-weight:700;letter-spacing:0.02em;margin-bottom:4px;white-space:nowrap;">今日は注文済みです</div>
+          <div id="order-status-detail" style="font-size:0.75rem;opacity:0.88;"></div>
+        </div>
+      </div>
+
       <div class="today-menu-card" id="today-menu-card"></div>
 
       <!-- 名前選択 -->
@@ -1079,8 +1091,25 @@ function showNameDropdown(q){
   }
   dd.classList.add('open');
 }
+function renderOrderStatusBanner(){
+  const banner=document.getElementById('order-status-banner');
+  if(!banner)return;
+  const lastName=localStorage.getItem('bento_last_name')||'';
+  if(!lastName){banner.style.display='none';return;}
+  const targetKey=orderTargetKey();
+  const myOrder=orders.find(o=>o.name===lastName&&o.date===targetKey);
+  if(myOrder){
+    document.getElementById('order-status-name').textContent=lastName.split(' ').slice(-1)[0]+'さん';
+    document.getElementById('order-status-detail').textContent=
+      `${myOrder.emoji||'🍱'} ${myOrder.bentoName}${myOrder.oomori?'（大盛り）':''}　${myOrder.time}注文`;
+    banner.style.display='flex';
+  }else{
+    banner.style.display='none';
+  }
+}
 function selectName(name){
   selectedName=name;
+  localStorage.setItem('bento_last_name',name);
   document.getElementById('name-search-input').value='';
   document.getElementById('name-dropdown').classList.remove('open');
   // この月の注文合計を計算
@@ -1280,6 +1309,7 @@ function submitAllOrders(){
   showToast(`✅ ${cart.length}件の注文を確定しました！`);
   cart=[];renderCart();
   clearSelectedName();
+  renderOrderStatusBanner();
 }
 
 // ===== ARCHIVE / RESET =====
@@ -2880,7 +2910,7 @@ async function switchTab(tab){
   document.querySelectorAll('.tab-btn').forEach((b,i)=>{b.classList.toggle('active',TABS[i]===tab);});
   // タブ切り替え時にページ先頭にスクロール
   window.scrollTo(0,0);
-  if(tab==='order'){renderTodayMenu();renderBentoList();renderCart();}
+  if(tab==='order'){renderTodayMenu();renderBentoList();renderCart();renderOrderStatusBanner();}
   if(tab==='summary')renderSummary();
   if(tab==='calendar')renderCalendar();
   if(tab==='receipt')renderReceiptList();
@@ -2965,6 +2995,7 @@ renderAiKeyArea();
     }
     updateBadge();
     renderCart();
+    renderOrderStatusBanner();
   }catch(e){
     console.log('同期エラー:', e);
   }
