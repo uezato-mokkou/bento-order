@@ -2606,11 +2606,19 @@ function adminUnlock(){
   }
 }
 
-function renderAdminSummary(){
+async function renderAdminSummary(){
   const sel=document.getElementById('admin-month-select').value;
   const[y,m]=sel.split('-').map(Number);
-  const{keys:allKeys,hasCurrentOrders,todayKey}=getMonthKeys(sel);
   const container=document.getElementById('admin-name-summary');
+  // クラウドから最新の月次データを取得
+  try{
+    const cloudHistory=await loadDailyHistoryFromCloud(sel);
+    if(Object.keys(cloudHistory).length>0){
+      Object.assign(dailyHistory,cloudHistory);
+      saveDailyHistory();
+    }
+  }catch(e){console.error('管理集計クラウド読み込みエラー:',e);}
+  const{keys:allKeys,hasCurrentOrders,todayKey}=getMonthKeys(sel);
   if(!allKeys.length){container.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text-sub);font-size:0.84rem;">この月の記録はありません</div>`;return;}
 
   // 名前別集計
@@ -2867,7 +2875,7 @@ async function checkAutoMonthlySend(){
 
 // ===== TAB =====
 const TABS=['order','calendar','summary','history','receipt','monthly','admin'];
-function switchTab(tab){
+async function switchTab(tab){
   TABS.forEach(t=>{document.getElementById(`section-${t}`).classList.toggle('active',t===tab);});
   document.querySelectorAll('.tab-btn').forEach((b,i)=>{b.classList.toggle('active',TABS[i]===tab);});
   // タブ切り替え時にページ先頭にスクロール
@@ -2891,20 +2899,32 @@ function switchTab(tab){
     });
   }
   if(tab==='history')renderHistory();
-  if(tab==='admin'&&adminUnlocked){initMonthlySelect();renderAdminSummary();}
+  if(tab==='admin'&&adminUnlocked){initMonthlySelect();await renderAdminSummary();}
 }
 function updateBadge(){document.getElementById('count-badge').textContent=orders.length;}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
 
 // ===== INIT =====
-// Service Worker無効化（キャッシュ問題解決）
+// Service Worker登録（常に最新版を取得・キャッシュ問題防止）
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.getRegistrations().then(regs=>{
-    regs.forEach(r=>r.unregister());
-  });
+  navigator.serviceWorker.register('/bento-order/sw.js',{scope:'/bento-order/'})
+    .then(reg=>{
+      // 新しいバージョンが見つかったら自動リロード
+      reg.addEventListener('updatefound',()=>{
+        const nw=reg.installing;
+        nw.addEventListener('statechange',()=>{
+          if(nw.state==='installed'&&navigator.serviceWorker.controller){
+            showToast('🔄 新しいバージョンを読み込んでいます...');
+            setTimeout(()=>location.reload(),1500);
+          }
+        });
+      });
+      reg.update(); // 起動ごとに更新確認
+    })
+    .catch(e=>console.log('SW登録エラー:',e));
 }
 // アプリバージョンチェック（更新検知）
-const APP_VERSION='20260331143453';
+const APP_VERSION='20260417000000';
 const savedVersion=localStorage.getItem('bento_app_version');
 if(savedVersion && savedVersion!==APP_VERSION){
   // バージョンが変わっていたらキャッシュをクリア
@@ -2980,13 +3000,20 @@ renderAiKeyArea();
   }
 })();
 
-// 起動時にクラウドからメニューデータを読み込む
+// 起動時にクラウドからメニュー・月次データを読み込む
 (async function initCloudData(){
   try{
-    // メニュー・納品書を並行読み込み
-    const[cloudMenu,cloudReceipts]=await Promise.all([
+    const d=now();
+    const thisMonth=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
+    // 先月のキーを計算
+    const prevDate=new Date(d.getFullYear(),d.getMonth()-1,1);
+    const prevMonth=`${prevDate.getFullYear()}-${pad(prevDate.getMonth()+1)}`;
+    // メニュー・納品書・当月月次・先月月次を並行読み込み
+    const[cloudMenu,cloudReceipts,cloudHistoryThis,cloudHistoryPrev]=await Promise.all([
       loadMenuDataFromCloud(),
-      loadReceiptsFromCloud()
+      loadReceiptsFromCloud(),
+      loadDailyHistoryFromCloud(thisMonth),
+      loadDailyHistoryFromCloud(prevMonth)
     ]);
     if(Object.keys(cloudMenu).length>0){
       Object.assign(menuData,cloudMenu);
@@ -2996,6 +3023,14 @@ renderAiKeyArea();
       Object.assign(receipts,cloudReceipts);
       saveReceipts();
     }
+    // 月次履歴をクラウドから上書き（常に正しいデータを保持）
+    if(Object.keys(cloudHistoryThis).length>0){
+      Object.assign(dailyHistory,cloudHistoryThis);
+    }
+    if(Object.keys(cloudHistoryPrev).length>0){
+      Object.assign(dailyHistory,cloudHistoryPrev);
+    }
+    saveDailyHistory();
     renderTodayMenu();
     renderBentoList();
     renderCalendar();
