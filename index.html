@@ -722,6 +722,42 @@ async function saveDailyHistoryToCloud(dateKey, entry){
   }
 }
 
+// ===== アプリ設定のクラウド保存・読み込み =====
+async function saveSettingsToCloud(){
+  const settings={
+    groqApiKey: groqApiKey||'',
+    slackWebhookUrl: slackWebhookUrl||'',
+    lineGroupUrl: lineGroupUrl||''
+  };
+  try{
+    // まずPOSTを試み、既存なら PATCH
+    await sbFetch('daily_history','POST',{
+      date_key:'_settings_v1',
+      total:0, count:0,
+      summary:[settings],
+      orders:[]
+    });
+  }catch(e){
+    try{
+      await sbFetch('daily_history?date_key=eq._settings_v1','PATCH',{
+        summary:[settings]
+      });
+    }catch(e2){ console.error('設定クラウド保存エラー:',e2); }
+  }
+}
+async function loadSettingsFromCloud(){
+  try{
+    const rows=await sbFetch('daily_history?date_key=eq._settings_v1');
+    if(rows&&rows.length>0&&rows[0].summary&&rows[0].summary.length>0){
+      const s=rows[0].summary[0];
+      // クラウドの値がある場合のみ上書き（localStorageの値を優先しない）
+      if(s.groqApiKey)    { groqApiKey=s.groqApiKey;     localStorage.setItem('bento_groq_api_key',groqApiKey); }
+      if(s.slackWebhookUrl){ slackWebhookUrl=s.slackWebhookUrl; localStorage.setItem('bento_slack_webhook',slackWebhookUrl); }
+      if(s.lineGroupUrl)  { lineGroupUrl=s.lineGroupUrl;  localStorage.setItem('bento_line_group_url',lineGroupUrl); }
+    }
+  }catch(e){ console.error('設定クラウド読み込みエラー:',e); }
+}
+
 // ===== 画像圧縮 =====
 function compressImage(dataUrl, maxWidth=1200, quality=0.7){
   return new Promise((resolve)=>{
@@ -925,9 +961,9 @@ function loadState(){
   groqApiKey=localStorage.getItem('bento_groq_api_key')||'';
   appPublicUrl=''; // 固定URLのみ使用
 }
-function saveLineGroupUrl(){localStorage.setItem('bento_line_group_url',lineGroupUrl);}
-function saveSlackWebhook(){localStorage.setItem('bento_slack_webhook',slackWebhookUrl);}
-function saveGroqApiKey(){localStorage.setItem('bento_groq_api_key',groqApiKey);}
+function saveLineGroupUrl(){localStorage.setItem('bento_line_group_url',lineGroupUrl);saveSettingsToCloud();}
+function saveSlackWebhook(){localStorage.setItem('bento_slack_webhook',slackWebhookUrl);saveSettingsToCloud();}
+function saveGroqApiKey(){localStorage.setItem('bento_groq_api_key',groqApiKey);saveSettingsToCloud();}
 function saveAppPublicUrl(){localStorage.setItem('bento_app_public_url',appPublicUrl);}
 function saveOrders(){localStorage.setItem('bento_orders_v5',JSON.stringify(orders));}
 function saveDailyHistory(){localStorage.setItem('bento_daily_history',JSON.stringify(dailyHistory));}
@@ -3046,6 +3082,10 @@ renderAiKeyArea();
       loadDailyHistoryFromCloud(thisMonth),
       loadDailyHistoryFromCloud(prevMonth)
     ]);
+    // 設定をクラウドから読み込み（APIキー・Slack・LINE URL を全デバイスで共有）
+    await loadSettingsFromCloud();
+    // 設定読み込み後にUIを更新
+    renderAiKeyArea();
     if(Object.keys(cloudMenu).length>0){
       Object.assign(menuData,cloudMenu);
       saveMenuData();
