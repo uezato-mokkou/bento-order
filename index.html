@@ -902,7 +902,7 @@ const BENTOS=[
   {id:4,name:'照り焼きチキン弁当',emoji:'🍖',price:650,daily:false},
 ];
 const OOMORI=50;
-const ADMIN_PASSWORD='uezato3028';
+const ADMIN_PASSWORD_HASH='cd0532843c18ae155a42a76e29bd6805c37526e5a3498936c6e1951fb548bbfc';
 
 const MARCH_MENU={
   2:{main:'手作り白身魚フライ',sides:['麩チャンプルー','鶏と冬瓜の煮物','切り干し大根炊いたん']},
@@ -2670,9 +2670,12 @@ function clearAdminNameInput(){
 }
 
 // ===== ADMIN =====
-function adminUnlock(){
+async function adminUnlock(){
   const pw=document.getElementById('admin-pw-input').value;
-  if(pw===ADMIN_PASSWORD){
+  // SHA-256ハッシュで比較（平文パスワードをソースに残さない）
+  const hashBuf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pw));
+  const hashHex=Array.from(new Uint8Array(hashBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  if(hashHex===ADMIN_PASSWORD_HASH){
     adminUnlocked=true;
     document.getElementById('admin-locked-view').style.display='none';
     document.getElementById('admin-unlocked-view').style.display='block';
