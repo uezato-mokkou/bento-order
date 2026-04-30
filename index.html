@@ -967,7 +967,15 @@ function saveGroqApiKey(){localStorage.setItem('bento_groq_api_key',groqApiKey);
 function saveAppPublicUrl(){localStorage.setItem('bento_app_public_url',appPublicUrl);}
 function saveOrders(){localStorage.setItem('bento_orders_v5',JSON.stringify(orders));}
 function saveDailyHistory(){localStorage.setItem('bento_daily_history',JSON.stringify(dailyHistory));}
-function saveReceipts(){localStorage.setItem('bento_receipts',JSON.stringify(receipts));}
+function saveReceipts(){
+  // 納品書画像はサイズが大きいためlocalStorageには保存せずクラウドのみで管理
+  try{localStorage.setItem('bento_receipts',JSON.stringify(receipts));}
+  catch(e){
+    // 容量超過の場合はlocalStorageをクリアしてクラウドから都度取得
+    try{localStorage.removeItem('bento_receipts');}catch(e2){}
+    console.log('納品書はクラウドから取得します（localStorage容量超過）');
+  }
+}
 function saveMenuData(){localStorage.setItem('bento_menu_data',JSON.stringify(menuData));}
 
 // ===== UTILS =====
@@ -3092,7 +3100,7 @@ renderAiKeyArea();
     }
     if(Object.keys(cloudReceipts).length>0){
       Object.assign(receipts,cloudReceipts);
-      saveReceipts();
+      try{saveReceipts();}catch(e){localStorage.removeItem('bento_receipts');}
     }
     // 月次履歴をクラウドから上書き（常に正しいデータを保持）
     if(Object.keys(cloudHistoryThis).length>0){
@@ -3101,7 +3109,7 @@ renderAiKeyArea();
     if(Object.keys(cloudHistoryPrev).length>0){
       Object.assign(dailyHistory,cloudHistoryPrev);
     }
-    saveDailyHistory();
+    try{saveDailyHistory();}catch(e){localStorage.removeItem('bento_daily_history');}
     renderTodayMenu();
     renderBentoList();
     renderCalendar();
