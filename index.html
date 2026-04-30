@@ -1754,7 +1754,18 @@ async function openVendorPage(){
   document.getElementById('vendor-view').style.display='block';
   document.body.style.overflow='hidden';
   document.getElementById('vendor-view').scrollTop=0;
-  vendorRefreshTimer=setInterval(()=>{loadState();renderVendorView(currentVendorSel);},30000);
+  vendorRefreshTimer=setInterval(async()=>{
+    // クラウドから最新の注文履歴・納品書を取得してから再描画
+    try{
+      const[cloudHistory,cloudReceipts]=await Promise.all([
+        loadDailyHistoryFromCloud(currentVendorSel),
+        loadReceiptsFromCloud()
+      ]);
+      if(Object.keys(cloudHistory).length>0) Object.assign(dailyHistory,cloudHistory);
+      if(Object.keys(cloudReceipts).length>0) Object.assign(receipts,cloudReceipts);
+    }catch(e){console.error('自動更新エラー:',e);}
+    renderVendorView(currentVendorSel);
+  },30000);
 }
 function closeVendorView(){
   document.getElementById('vendor-view').style.display='none';
@@ -3066,8 +3077,8 @@ renderAiKeyArea();
         loadDailyHistoryFromCloud(sel),
         loadReceiptsFromCloud()
       ]);
-      if(Object.keys(cloudHistory).length>0){Object.assign(dailyHistory,cloudHistory);saveDailyHistory();}
-      if(Object.keys(cloudReceipts).length>0){Object.assign(receipts,cloudReceipts);saveReceipts();}
+      if(Object.keys(cloudHistory).length>0){Object.assign(dailyHistory,cloudHistory);try{saveDailyHistory();}catch(e){}}
+      if(Object.keys(cloudReceipts).length>0){Object.assign(receipts,cloudReceipts);try{saveReceipts();}catch(e){}}
     }catch(e){console.error(e);}
     currentVendorSel=sel;
     renderVendorView(sel);
