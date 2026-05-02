@@ -218,6 +218,7 @@ header{background:var(--primary);color:white;padding:calc(14px + env(safe-area-i
 #holiday-notice.active + #order-form-area { display: none !important; }
 .toast{position:fixed;bottom:calc(70px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:#1C1008;color:white;padding:10px 20px;border-radius:28px;font-size:0.8rem;font-weight:700;opacity:0;transition:all 0.28s;z-index:9999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.3);}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.error{background:#b83232;white-space:normal;max-width:90vw;text-align:center;line-height:1.5;padding:12px 20px;}
 
 @keyframes fadeOverlay{
   0%{opacity:0;transform:scale(0.8);}
@@ -658,20 +659,18 @@ async function sbFetch(path, method='GET', body=null){
   return text?JSON.parse(text):[];
 }
 
-// 注文をSupabaseに保存
+// 注文をSupabaseに保存（失敗時は例外をそのまま投げる）
 async function saveOrderToCloud(order){
-  try{
-    await sbFetch('orders', 'POST', {
-      date: order.date,
-      name: order.name,
-      bento_id: order.bentoId,
-      bento_name: order.bentoName,
-      emoji: order.emoji,
-      oomori: order.oomori,
-      price: order.price,
-      time: order.time
-    });
-  }catch(e){ console.error('クラウド保存エラー:', e); }
+  await sbFetch('orders', 'POST', {
+    date: order.date,
+    name: order.name,
+    bento_id: order.bentoId,
+    bento_name: order.bentoName,
+    emoji: order.emoji,
+    oomori: order.oomori,
+    price: order.price,
+    time: order.time
+  });
 }
 
 // 当日の注文をSupabaseから読み込む
@@ -1242,7 +1241,7 @@ function selectOpt(bentoId,oomori){
 }
 
 // ===== CART =====
-function orderAndSubmit(){
+async function orderAndSubmit(){
   // 休業日チェック
   if(isHolidayOrWeekend()){showToast('🏪 本日は平良商店さんがお休みです');return;}
   // 名前チェック
@@ -1261,15 +1260,26 @@ function orderAndSubmit(){
   newOrders.forEach(c=>{
     orders.push({...c,time:t,date:targetKey});
   });
-  saveOrders();updateBadge();
-  // クラウドに保存
   const lastOrder=orders[orders.length-1];
-  saveOrderToCloud(lastOrder);
+  saveOrders();updateBadge();
+  // クラウドに保存（失敗時はロールバック＋エラー表示）
+  try{
+    await saveOrderToCloud(lastOrder);
+  }catch(e){
+    // 保存失敗 → ローカルからも削除してエラー表示
+    orders=orders.filter(o=>o!==lastOrder);
+    saveOrders();updateBadge();
+    cart=[];renderCart();
+    showToast('⚠️ 注文の送信に失敗しました。\nネットワークを確認して再度お試しください','error',5000);
+    console.error('クラウド保存エラー:',e);
+    return;
+  }
   const name=selectedName;
   const bentoName=b.name+(selectedBento.oomori?'（大盛り）':'');
   const targetLabel=orderTargetLabel();
   showToast(`✅ ${name}：${bentoName}（${targetLabel}）`);
   showOrderedOverlay(name, bentoName);
+  renderOrderStatusBanner();
   // リセット
   cart=[];renderCart();
   document.querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('selected'));
@@ -2572,9 +2582,15 @@ async function adminAddOrder(){
       showToast('⚠️ 更新に失敗しました');
     }
   } else {
-    await saveOrderToCloud(order);
-    orders.push(order);
-    showToast(`✅ ${name}さんの注文を追加しました`);
+    try{
+      await saveOrderToCloud(order);
+      orders.push(order);
+      showToast(`✅ ${name}さんの注文を追加しました`);
+    }catch(e){
+      console.error('管理追加エラー:',e);
+      showToast('⚠️ 追加に失敗しました。ネットワークを確認してください','error',4000);
+      return;
+    }
   }
   
   adminEditingCloudId = null;
@@ -2966,10 +2982,23 @@ const TABS=['order','calendar','summary','history','receipt','monthly','admin'];
 async function switchTab(tab){
   TABS.forEach(t=>{document.getElementById(`section-${t}`).classList.toggle('active',t===tab);});
   document.querySelectorAll('.tab-btn').forEach((b,i)=>{b.classList.toggle('active',TABS[i]===tab);});
+  // 集計タブから離れたら自動更新を停止
+  if(tab!=='summary'&&summaryAutoRefreshTimer){clearInterval(summaryAutoRefreshTimer);summaryAutoRefreshTimer=null;}
   // タブ切り替え時にページ先頭にスクロール
   window.scrollTo(0,0);
   if(tab==='order'){renderTodayMenu();renderBentoList();renderCart();renderOrderStatusBanner();}
-  if(tab==='summary')renderSummary();
+  if(tab==='summary'){
+    // 常にクラウドから最新取得して表示（renderSummary内で実施済み）
+    await renderSummary();
+    // 30秒ごとに自動更新（他の人が注文してもリアルタイムに反映）
+    if(!summaryAutoRefreshTimer){
+      summaryAutoRefreshTimer=setInterval(()=>{
+        const activeTab=document.querySelector('.tab-btn.active');
+        if(activeTab&&activeTab.getAttribute('onclick')==="switchTab('summary')")renderSummary();
+        else{clearInterval(summaryAutoRefreshTimer);summaryAutoRefreshTimer=null;}
+      },30000);
+    }
+  }
   if(tab==='calendar')renderCalendar();
   if(tab==='receipt')renderReceiptList();
   if(tab==='monthly'){
@@ -2990,7 +3019,14 @@ async function switchTab(tab){
   if(tab==='admin'&&adminUnlocked){initMonthlySelect();await renderAdminSummary();}
 }
 function updateBadge(){document.getElementById('count-badge').textContent=orders.length;}
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+function showToast(msg,type,duration){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.remove('error');
+  if(type==='error')t.classList.add('error');
+  t.classList.add('show');
+  setTimeout(()=>{t.classList.remove('show');t.classList.remove('error');},(duration||2800));
+}
 
 // ===== INIT =====
 // Service Worker登録（常に最新版を取得・キャッシュ問題防止）
@@ -3037,6 +3073,9 @@ renderAiKeyArea();
   if(input) input.addEventListener('change',onAiFileSelected);
 })();
 
+// 集計タブの自動更新タイマー
+let summaryAutoRefreshTimer=null;
+
 // 起動時に当日の注文状態を確認
 // Supabaseの注文データと同期（localStorageより優先）
 (async function syncOrdersOnLoad(){
@@ -3054,6 +3093,9 @@ renderAiKeyArea();
     updateBadge();
     renderCart();
     renderOrderStatusBanner();
+    // 集計タブが開いていれば再描画（起動時の古いデータを最新に更新）
+    const activeTab=document.querySelector('.tab-btn.active');
+    if(activeTab&&activeTab.getAttribute('onclick')==="switchTab('summary')")renderSummary();
   }catch(e){
     console.log('同期エラー:', e);
   }
