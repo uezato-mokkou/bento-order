@@ -616,9 +616,13 @@ header{background:var(--primary);color:white;padding:calc(14px + env(safe-area-i
         <div style="font-size:0.72rem;opacity:0.85;margin-top:3px;" id="vendor-header-sub"></div>
         <div style="font-size:0.65rem;opacity:0.7;margin-top:2px;" id="vendor-last-updated"></div>
       </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
         <button onclick="vendorManualRefresh()" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:white;border-radius:8px;padding:5px 10px;font-size:0.7rem;font-family:'Noto Sans JP',sans-serif;cursor:pointer;white-space:nowrap;">🔄 更新</button>
-
+        <div style="display:flex;align-items:center;gap:4px;">
+          <button onclick="changeVendorMonth(-1)" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:white;border-radius:8px;padding:4px 10px;font-size:0.85rem;font-family:'Noto Sans JP',sans-serif;cursor:pointer;line-height:1;">◀</button>
+          <span id="vendor-month-label" style="font-size:0.78rem;font-weight:700;color:white;white-space:nowrap;padding:0 4px;"></span>
+          <button onclick="changeVendorMonth(1)" id="vendor-month-next-btn" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:white;border-radius:8px;padding:4px 10px;font-size:0.85rem;font-family:'Noto Sans JP',sans-serif;cursor:pointer;line-height:1;">▶</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1816,6 +1820,26 @@ function onVendorMonthChange(){
   currentVendorSel=sel.value;
   renderVendorView(currentVendorSel);
 }
+async function changeVendorMonth(delta){
+  const[y,m]=currentVendorSel.split('-').map(Number);
+  const nd=new Date(y,m-1+delta,1);
+  const newSel=`${nd.getFullYear()}-${pad(nd.getMonth()+1)}`;
+  // 未来月には進めない
+  const d=now();
+  const thisMonthKey=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
+  if(newSel>thisMonthKey)return;
+  currentVendorSel=newSel;
+  // クラウドから対象月のデータを取得
+  try{
+    const[cloudHistory,cloudReceipts]=await Promise.all([
+      loadDailyHistoryFromCloud(newSel),
+      loadReceiptsFromCloud()
+    ]);
+    if(Object.keys(cloudHistory).length>0)Object.assign(dailyHistory,cloudHistory);
+    if(Object.keys(cloudReceipts).length>0)Object.assign(receipts,cloudReceipts);
+  }catch(e){console.error('月変更エラー:',e);}
+  renderVendorView(currentVendorSel);
+}
 function vendorOpenImg(key){const r=receipts[key];if(!r)return;document.getElementById('modal-img').src=r.dataUrl;document.getElementById('modal-overlay').classList.remove('hidden');}
 
 function renderVendorView(sel){
@@ -1823,6 +1847,13 @@ function renderVendorView(sel){
   const{keys:allKeys,hasCurrentOrders,todayKey}=getMonthKeys(sel);
   const todayStr=now().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'});
   document.getElementById('vendor-header-sub').textContent=`${y}年${m}月分　／　${todayStr}現在`;
+  // 月ナビゲーション：ラベルと翌月ボタンの状態を更新
+  const lbl=document.getElementById('vendor-month-label');
+  if(lbl)lbl.textContent=`${y}年${m}月`;
+  const d=now();
+  const thisMonthKey=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
+  const nextBtn=document.getElementById('vendor-month-next-btn');
+  if(nextBtn){nextBtn.style.opacity=sel>=thisMonthKey?'0.3':'1';nextBtn.style.pointerEvents=sel>=thisMonthKey?'none':'auto';}
   const updEl=document.getElementById('vendor-last-updated');
   if(updEl)updEl.textContent=`最終更新：${now().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
   if(!allKeys.length){document.getElementById('vendor-content').innerHTML=`<div style="text-align:center;padding:40px;color:#7A6A5A;">この月のデータがありません</div>`;return;}
@@ -3113,16 +3144,20 @@ let summaryAutoRefreshTimer=null;
     // 閉じるボタンを非表示（専用ページなので不要）
     const closeBtn=vv.querySelector('button[onclick="closeVendorView()"]');
     if(closeBtn) closeBtn.style.display='none';
-    // 最新月を自動選択して表示
+    // デフォルトは前月を表示（終わった月の集計確認が主目的のため）
     const d=now();
-    const sel=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
-    // クラウドから全データ読み込み
+    const prevDate=new Date(d.getFullYear(),d.getMonth()-1,1);
+    const sel=`${prevDate.getFullYear()}-${pad(prevDate.getMonth()+1)}`;
+    const thisMonth=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
+    // クラウドから前月・当月のデータを並行読み込み
     try{
-      const[cloudHistory,cloudReceipts]=await Promise.all([
+      const[cloudHistoryPrev,cloudHistoryThis,cloudReceipts]=await Promise.all([
         loadDailyHistoryFromCloud(sel),
+        loadDailyHistoryFromCloud(thisMonth),
         loadReceiptsFromCloud()
       ]);
-      if(Object.keys(cloudHistory).length>0){Object.assign(dailyHistory,cloudHistory);try{saveDailyHistory();}catch(e){}}
+      if(Object.keys(cloudHistoryPrev).length>0){Object.assign(dailyHistory,cloudHistoryPrev);try{saveDailyHistory();}catch(e){}}
+      if(Object.keys(cloudHistoryThis).length>0){Object.assign(dailyHistory,cloudHistoryThis);try{saveDailyHistory();}catch(e){}}
       if(Object.keys(cloudReceipts).length>0){Object.assign(receipts,cloudReceipts);try{saveReceipts();}catch(e){}}
     }catch(e){console.error(e);}
     currentVendorSel=sel;
