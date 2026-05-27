@@ -599,10 +599,11 @@ header{background:var(--primary);color:white;padding:calc(14px + env(safe-area-i
             <div id="gemini-key-status" style="margin-top:8px;font-size:0.76rem;text-align:center;"></div>
           </div>
 
+          <!-- 全データリセット -->
+          <button class="reset-btn" onclick="adminResetAll()" style="width:100%;border-color:#C8401A;color:#C8401A;margin-top:6px;">⚠️ 全データをリセット</button>
+
         </div>
       </div>
-
-      <button class="reset-btn" onclick="adminResetAll()" style="border-color:#C8401A;color:#C8401A;margin-top:16px;">⚠️ 全データをリセット</button>
       <div style="margin-top:16px;text-align:center;font-size:0.72rem;color:var(--text-sub);padding:10px;background:#f9f9f9;border-radius:8px;">
         🔄 アプリバージョン：<span style="font-family:monospace;font-weight:700;">20260331143453</span><br>
         <span style="font-size:0.65rem;opacity:0.7;">GitHubに更新するたびに番号が変わります</span>
@@ -2055,9 +2056,8 @@ function renderAiKeyArea(){
   const area=document.getElementById('ai-key-area');
   if(!area)return;
   if(groqApiKey){
-    area.innerHTML=`<div style="font-size:0.74rem;color:#2E7D32;background:#E8F5E9;border-radius:8px;padding:7px 10px;display:flex;align-items:center;justify-content:space-between;">
+    area.innerHTML=`<div style="font-size:0.74rem;color:#2E7D32;background:#E8F5E9;border-radius:8px;padding:7px 10px;">
       <span>✅ APIキー設定済み</span>
-      <button onclick="clearAiKeyInline()" style="font-size:0.7rem;color:#999;background:none;border:none;cursor:pointer;padding:0;">🗑️ クリア</button>
     </div>`;
   }else{
     area.innerHTML=`<div style="background:#FFF3E0;border:2px solid #FF9800;border-radius:10px;padding:10px 12px;">
