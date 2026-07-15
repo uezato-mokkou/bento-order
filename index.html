@@ -1576,18 +1576,53 @@ async function renderReceiptList(){
   }
   const keys=Object.keys(receipts).sort().reverse();
   if(!keys.length){list.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text-sub);font-size:0.84rem">保存された納品書はありません</div>`;return;}
-  list.innerHTML=keys.map(key=>{
-    const thumb=receipts[key].dataUrl
-      ?`<img class="receipt-thumb" src="${receipts[key].dataUrl}" alt="納品書" onclick="openModal('${key}')">`
-      :`<div class="receipt-thumb" style="display:flex;align-items:center;justify-content:center;background:#F5F0E8;font-size:1.4rem;" onclick="openModal('${key}')" title="タップで表示">🧾</div>`;
-    return`<div class="receipt-item">
-    ${thumb}
-    <div class="receipt-info">
-      <div class="receipt-item-date">${fmtDate(key)}</div>
-      <div class="receipt-item-status">保存：${receipts[key].savedAt}</div>
-    </div>
-    <button class="receipt-delete-btn" onclick="deleteReceipt('${key}')">削除</button>
-  </div>`;}).join('');
+  // 月ごとにグループ化（今月のみ展開、過去月は折りたたみ）
+  const d=now();
+  const currentMonthKey=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
+  const monthMap={};
+  keys.forEach(key=>{
+    const mk=key.substring(0,7);
+    if(!monthMap[mk])monthMap[mk]=[];
+    monthMap[mk].push(key);
+  });
+  const months=Object.keys(monthMap).sort((a,b)=>b.localeCompare(a));
+  list.innerHTML=months.map(mk=>{
+    const[y,m]=mk.split('-').map(Number);
+    const isCurrentMonth=mk===currentMonthKey;
+    const isCollapsed=!isCurrentMonth;
+    const headerBg=isCurrentMonth?'#EEF4FF':'#f8f8f8';
+    const headerColor=isCurrentMonth?'var(--blue)':'var(--text-sub)';
+    const monthLabel=isCurrentMonth?`📅 ${y}年${m}月（今月）`:`📁 ${y}年${m}月`;
+    const itemsHtml=monthMap[mk].map(key=>{
+      const thumb=receipts[key].dataUrl
+        ?`<img class="receipt-thumb" src="${receipts[key].dataUrl}" alt="納品書" onclick="openModal('${key}')">`
+        :`<div class="receipt-thumb" style="display:flex;align-items:center;justify-content:center;background:#F5F0E8;font-size:1.4rem;" onclick="openModal('${key}')" title="タップで表示">🧾</div>`;
+      return`<div class="receipt-item" style="box-shadow:none;border:none;border-bottom:1px solid var(--border);border-radius:0;">
+      ${thumb}
+      <div class="receipt-info">
+        <div class="receipt-item-date">${fmtDate(key)}</div>
+        <div class="receipt-item-status">保存：${receipts[key].savedAt}</div>
+      </div>
+      <button class="receipt-delete-btn" onclick="deleteReceipt('${key}')">削除</button>
+    </div>`;}).join('');
+    return`<div style="margin-bottom:8px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:white;">
+      <button onclick="toggleReceiptMonth('${mk}')" style="width:100%;padding:11px 14px;background:${headerBg};border:none;font-family:'Noto Sans JP',sans-serif;cursor:pointer;display:flex;justify-content:space-between;align-items:center;min-height:44px;">
+        <span style="font-size:0.82rem;font-weight:700;color:${headerColor};">${monthLabel}</span>
+        <span style="font-size:0.74rem;color:var(--text-sub);">${monthMap[mk].length}枚 <span id="receipt-month-arrow-${mk}" style="font-size:0.7rem;">${isCollapsed?'▶':'▼'}</span></span>
+      </button>
+      <div id="receipt-month-content-${mk}" style="display:${isCollapsed?'none':'block'};padding:0 10px;">
+        ${itemsHtml}
+      </div>
+    </div>`;
+  }).join('');
+}
+function toggleReceiptMonth(mk){
+  const content=document.getElementById('receipt-month-content-'+mk);
+  const arrow=document.getElementById('receipt-month-arrow-'+mk);
+  if(!content||!arrow)return;
+  const hidden=content.style.display==='none';
+  content.style.display=hidden?'block':'none';
+  arrow.textContent=hidden?'▼':'▶';
 }
 async function deleteReceipt(key){
   if(!confirm(`${fmtDate(key)}の納品書を削除しますか？`))return;
