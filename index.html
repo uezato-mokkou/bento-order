@@ -836,13 +836,15 @@ async function saveReceiptToCloud(dateKey, dataUrl){
   }
 }
 
+// 一覧はメタ情報（日付・保存日時）のみ取得。画像本体はタップ時に個別取得（通信量削減）
 async function loadReceiptsFromCloud(){
   try{
-    const rows=await sbFetch('receipts?order=date_key.asc');
+    const rows=await sbFetch('receipts?select=date_key,saved_at&order=date_key.asc');
     const result={};
     rows.forEach(r=>{
+      const cached=(typeof receipts!=='undefined'&&receipts[r.date_key]&&receipts[r.date_key].dataUrl)?receipts[r.date_key].dataUrl:null;
       result[r.date_key]={
-        dataUrl: r.image_data,
+        dataUrl: cached,
         savedAt: r.saved_at
       };
     });
@@ -850,6 +852,17 @@ async function loadReceiptsFromCloud(){
   }catch(e){
     console.error('納品書クラウド読み込みエラー:',e);
     return {};
+  }
+}
+
+// 納品書画像を1枚だけ取得（タップ時に呼ばれる）
+async function loadReceiptImageFromCloud(dateKey){
+  try{
+    const rows=await sbFetch(`receipts?date_key=eq.${dateKey}&select=image_data`);
+    return rows.length>0?rows[0].image_data:null;
+  }catch(e){
+    console.error('納品書画像読み込みエラー:',e);
+    return null;
   }
 }
 
@@ -1563,14 +1576,18 @@ async function renderReceiptList(){
   }
   const keys=Object.keys(receipts).sort().reverse();
   if(!keys.length){list.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text-sub);font-size:0.84rem">保存された納品書はありません</div>`;return;}
-  list.innerHTML=keys.map(key=>`<div class="receipt-item">
-    <img class="receipt-thumb" src="${receipts[key].dataUrl}" alt="納品書" onclick="openModal('${key}')">
+  list.innerHTML=keys.map(key=>{
+    const thumb=receipts[key].dataUrl
+      ?`<img class="receipt-thumb" src="${receipts[key].dataUrl}" alt="納品書" onclick="openModal('${key}')">`
+      :`<div class="receipt-thumb" style="display:flex;align-items:center;justify-content:center;background:#F5F0E8;font-size:1.4rem;" onclick="openModal('${key}')" title="タップで表示">🧾</div>`;
+    return`<div class="receipt-item">
+    ${thumb}
     <div class="receipt-info">
       <div class="receipt-item-date">${fmtDate(key)}</div>
       <div class="receipt-item-status">保存：${receipts[key].savedAt}</div>
     </div>
     <button class="receipt-delete-btn" onclick="deleteReceipt('${key}')">削除</button>
-  </div>`).join('');
+  </div>`;}).join('');
 }
 async function deleteReceipt(key){
   if(!confirm(`${fmtDate(key)}の納品書を削除しますか？`))return;
@@ -1578,8 +1595,15 @@ async function deleteReceipt(key){
   delete receipts[key];saveReceipts();renderReceiptList();
   showToast('🗑️ 削除しました');
 }
-function openModal(key){
+async function openModal(key){
   const r=receipts[key];if(!r)return;
+  if(!r.dataUrl){
+    showToast('⏳ 納品書を読み込み中...');
+    const img=await loadReceiptImageFromCloud(key);
+    if(!img){showToast('❌ 納品書の読み込みに失敗しました','error');return;}
+    r.dataUrl=img;
+    try{saveReceipts();}catch(e){}
+  }
   document.getElementById('modal-img').src=r.dataUrl;
   document.getElementById('modal-overlay').classList.remove('hidden');
 }
@@ -1697,8 +1721,11 @@ async function renderMonthly(){
       byBento[k].names.push(o.name);
     });
     const nameRows=Object.values(byBento).map(b=>`<div style="font-size:0.73rem;color:var(--text-sub);margin-top:3px;"><span style="font-weight:700;color:var(--text);">${b.label}</span>　${b.names.join('・')}</div>`).join('');
+    const receiptThumb=receipt&&receipt.dataUrl
+      ?`<img src="${receipt.dataUrl}" style="width:44px;height:44px;border-radius:6px;object-fit:cover;cursor:pointer;border:1px solid var(--border);" onclick="openModal('${key}')">`
+      :`<div style="width:44px;height:44px;border-radius:6px;border:1px solid var(--border);background:#F5F0E8;display:flex;align-items:center;justify-content:center;font-size:1.2rem;cursor:pointer;" onclick="openModal('${key}')" title="タップで表示">🧾</div>`;
     const receiptHtml=receipt
-      ?`<div style="margin-top:8px;display:flex;align-items:center;gap:8px;"><img src="${receipt.dataUrl}" style="width:44px;height:44px;border-radius:6px;object-fit:cover;cursor:pointer;border:1px solid var(--border);" onclick="openModal('${key}')"><span style="font-size:0.7rem;color:var(--accent2);font-weight:700;">✅ 納品書あり</span></div>`
+      ?`<div style="margin-top:8px;display:flex;align-items:center;gap:8px;">${receiptThumb}<span style="font-size:0.7rem;color:var(--accent2);font-weight:700;">✅ 納品書あり（タップで表示）</span></div>`
       :`<div style="margin-top:6px;font-size:0.7rem;color:#ccc;">📄 納品書未登録</div>`;
     return`<div style="border-bottom:2px solid var(--border);padding:10px 0 8px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
@@ -1781,7 +1808,9 @@ async function openVendorPage(){
   document.body.style.overflow='hidden';
   document.getElementById('vendor-view').scrollTop=0;
   vendorRefreshTimer=setInterval(async()=>{
-    // クラウドから最新の注文履歴・納品書を取得してから再描画
+    // バックグラウンドのタブでは更新しない（通信量節約）
+    if(document.hidden)return;
+    // クラウドから最新の注文履歴のみ取得（納品書メタ情報は開いた時に取得済み）
     try{
       const[cloudHistory,cloudReceipts]=await Promise.all([
         loadDailyHistoryFromCloud(currentVendorSel),
@@ -1852,7 +1881,18 @@ async function changeVendorMonth(delta){
   }catch(e){console.error('月変更エラー:',e);}
   renderVendorView(currentVendorSel);
 }
-function vendorOpenImg(key){const r=receipts[key];if(!r)return;document.getElementById('modal-img').src=r.dataUrl;document.getElementById('modal-overlay').classList.remove('hidden');}
+async function vendorOpenImg(key){
+  const r=receipts[key];if(!r)return;
+  if(!r.dataUrl){
+    showToast('⏳ 納品書を読み込み中...');
+    const img=await loadReceiptImageFromCloud(key);
+    if(!img){showToast('❌ 納品書の読み込みに失敗しました','error');return;}
+    r.dataUrl=img;
+    try{saveReceipts();}catch(e){}
+  }
+  document.getElementById('modal-img').src=r.dataUrl;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
 
 function renderVendorView(sel){
   const[y,m]=sel.split('-').map(Number);
@@ -1880,7 +1920,9 @@ function renderVendorView(sel){
         :`<span style="display:inline-block;background:#FFF0E8;border-radius:6px;padding:2px 8px;font-size:0.75rem;margin:2px 2px 0 0;color:#C8401A;font-weight:700;">${s.emoji}${s.bentoName}×${s.count}</span>`
     ).join('');
     const receiptSection=receipt
-      ?`<div style="margin-top:10px;"><div style="font-size:0.7rem;font-weight:700;color:#2D6A4F;margin-bottom:5px;">📄 納品書</div><img src="${receipt.dataUrl}" style="width:100%;max-height:220px;object-fit:contain;border-radius:10px;border:1px solid #EDE0D0;cursor:pointer;" onclick="vendorOpenImg('${key}')" alt="納品書"></div>`
+      ?(receipt.dataUrl
+        ?`<div style="margin-top:10px;"><div style="font-size:0.7rem;font-weight:700;color:#2D6A4F;margin-bottom:5px;">📄 納品書</div><img src="${receipt.dataUrl}" style="width:100%;max-height:220px;object-fit:contain;border-radius:10px;border:1px solid #EDE0D0;cursor:pointer;" onclick="vendorOpenImg('${key}')" alt="納品書"></div>`
+        :`<div style="margin-top:10px;"><button onclick="vendorOpenImg('${key}')" style="width:100%;padding:10px;background:#F0FFF5;border:2px solid #2D6A4F;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.8rem;font-weight:700;color:#2D6A4F;cursor:pointer;min-height:44px;">📄 納品書を表示する</button></div>`)
       :`<div style="margin-top:8px;font-size:0.7rem;color:#ccc;">📄 納品書未登録</div>`;
     return`<div style="background:white;border-radius:14px;padding:14px 15px;margin-bottom:10px;box-shadow:0 2px 10px rgba(0,0,0,0.07);">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
@@ -3105,6 +3147,8 @@ async function switchTab(tab){
     // 30秒ごとに自動更新（他の人が注文してもリアルタイムに反映）
     if(!summaryAutoRefreshTimer){
       summaryAutoRefreshTimer=setInterval(()=>{
+        // バックグラウンドのタブでは更新しない（通信量節約）
+        if(document.hidden)return;
         const activeTab=document.querySelector('.tab-btn.active');
         if(activeTab&&activeTab.getAttribute('onclick')==="switchTab('summary')")renderSummary();
         else{clearInterval(summaryAutoRefreshTimer);summaryAutoRefreshTimer=null;}
