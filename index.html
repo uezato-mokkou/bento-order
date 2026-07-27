@@ -336,7 +336,7 @@ header{background:var(--primary);color:white;padding:calc(14px + env(safe-area-i
       <div class="cart-area" id="cart-area"></div>
 
       <div class="submit-area">
-        <button class="submit-btn" onclick="orderAndSubmit()">✅ 注文を確定する</button>
+        <button class="submit-btn" id="order-submit-btn" onclick="orderAndSubmit()">✅ 注文を確定する</button>
       </div>
     </div>
   </div>
@@ -1270,7 +1270,10 @@ function selectOpt(bentoId,oomori){
 }
 
 // ===== CART =====
+let isSubmittingOrder=false; // 連打防止フラグ（送信中はtrue）
 async function orderAndSubmit(){
+  // 連打防止：送信中は受け付けない
+  if(isSubmittingOrder){showToast('⏳ 送信中です。そのままお待ちください');return;}
   // 休業日チェック
   if(isHolidayOrWeekend()){showToast('🏪 本日は平良商店さんがお休みです');return;}
   // 名前チェック
@@ -1279,42 +1282,39 @@ async function orderAndSubmit(){
   if(!selectedBento){showToast('⚠️ お弁当を選択してください');return;}
   // 時間チェック
   if(isClosed()){showToast('⏰ 8:35〜13:00は受付時間外です');return;}
-  // カートに追加
+  // 注文1件を作成（カートは経由しない：連打時の増殖バグ対策）
   const b=BENTOS.find(x=>x.id===selectedBento.bentoId);
-  cart.push({name:selectedName,bentoId:b.id,bentoName:b.name,emoji:b.emoji,oomori:selectedBento.oomori,price:b.price+(selectedBento.oomori?OOMORI:0)});
-  // 即確定
   const t=now().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
   const targetKey=orderTargetKey();
-  const newOrders=[...cart];
-  newOrders.forEach(c=>{
-    orders.push({...c,time:t,date:targetKey});
-  });
-  const lastOrder=orders[orders.length-1];
-  saveOrders();updateBadge();
-  // クラウドに保存（失敗時はロールバック＋エラー表示）
+  const newOrder={name:selectedName,bentoId:b.id,bentoName:b.name,emoji:b.emoji,oomori:selectedBento.oomori,price:b.price+(selectedBento.oomori?OOMORI:0),time:t,date:targetKey};
+  // 送信中はボタンを無効化
+  isSubmittingOrder=true;
+  const submitBtn=document.getElementById('order-submit-btn');
+  if(submitBtn){submitBtn.disabled=true;submitBtn.style.opacity='0.5';submitBtn.textContent='⏳ 送信中...';}
   try{
-    await saveOrderToCloud(lastOrder);
-  }catch(e){
-    // 保存失敗 → ローカルからも削除してエラー表示
-    orders=orders.filter(o=>o!==lastOrder);
+    // 先にクラウドへ保存し、成功してからローカルに反映（増殖・不整合防止）
+    await saveOrderToCloud(newOrder);
+    orders.push(newOrder);
     saveOrders();updateBadge();
+    const bentoName=b.name+(selectedBento.oomori?'（大盛り）':'');
+    const targetLabel=orderTargetLabel();
+    showToast(`✅ ${newOrder.name}：${bentoName}（${targetLabel}）`);
+    showOrderedOverlay(newOrder.name, bentoName);
+    renderOrderStatusBanner();
+    // リセット
     cart=[];renderCart();
+    document.querySelectorAll('.opt-btn').forEach(x=>x.classList.remove('selected'));
+    document.querySelectorAll('.bento-card').forEach(c=>c.classList.remove('selected'));
+    selectedBento=null;
+    // 名前はそのまま（連続注文しやすいように）
+  }catch(e){
     showToast('⚠️ 注文の送信に失敗しました。\nネットワークを確認して再度お試しください','error',5000);
     console.error('クラウド保存エラー:',e);
-    return;
+  }finally{
+    // 成功・失敗どちらでもボタンを復帰
+    isSubmittingOrder=false;
+    if(submitBtn){submitBtn.disabled=false;submitBtn.style.opacity='';submitBtn.textContent='✅ 注文を確定する';}
   }
-  const name=selectedName;
-  const bentoName=b.name+(selectedBento.oomori?'（大盛り）':'');
-  const targetLabel=orderTargetLabel();
-  showToast(`✅ ${name}：${bentoName}（${targetLabel}）`);
-  showOrderedOverlay(name, bentoName);
-  renderOrderStatusBanner();
-  // リセット
-  cart=[];renderCart();
-  document.querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('selected'));
-  document.querySelectorAll('.bento-card').forEach(c=>c.classList.remove('selected'));
-  selectedBento=null;
-  // 名前はそのまま（連続注文しやすいように）
 }
 
 function showOrderedOverlay(name, bentoName){
