@@ -2276,7 +2276,7 @@ let aiCalendarImageBase64='';
 let aiParsedMenuData={};
 
 // 画像をリサイズ・圧縮してAPIサイズ制限内に収める
-async function compressImageForApi(base64DataUrl,maxWidth=1600,quality=0.85){
+async function compressImageForApi(base64DataUrl,maxWidth=1200,quality=0.7){
   return new Promise(resolve=>{
     const img=new Image();
     img.onload=()=>{
@@ -2407,8 +2407,9 @@ async function aiReadCalendar(){
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqApiKey},
       body:JSON.stringify({
-        model:'meta-llama/llama-4-scout-17b-16e-instruct',
-        max_tokens:2000,
+        model:'qwen/qwen3.6-27b',
+        max_tokens:3000,
+        reasoning_effort:'none',
         messages:[{
           role:'user',
           content:[
@@ -2419,7 +2420,11 @@ async function aiReadCalendar(){
       })
     });
     const data=await response.json();
-    const text=data.choices?.[0]?.message?.content||'';
+    // APIエラーはそのまま表示（モデル廃止・キー無効などの原因特定のため）
+    if(data.error)throw new Error('Groq APIエラー: '+(data.error.message||JSON.stringify(data.error)));
+    let text=data.choices?.[0]?.message?.content||'';
+    // 思考タグが含まれていた場合は除去（reasoning_formatが効かない場合の保険）
+    text=text.replace(/<think>[\s\S]*?<\/think>/g,'');
     // JSONを抽出
     const jsonMatch=text.match(/\{[\s\S]*\}/);
     if(!jsonMatch)throw new Error('JSONが見つかりません');
@@ -2431,7 +2436,8 @@ async function aiReadCalendar(){
   }catch(err){
     console.error('AI読取エラー:',err);
     let errMsg='❌ 読み取りに失敗しました。';
-    if(err&&err.message&&err.message.includes('JSON'))errMsg+='AIの応答が不正でした。もう一度お試しください。';
+    if(err&&err.message&&err.message.startsWith('Groq APIエラー'))errMsg+=err.message;
+    else if(err&&err.message&&err.message.includes('JSON'))errMsg+='AIの応答が不正でした。もう一度お試しください。';
     else if(err&&err.message&&(err.message.includes('network')||err.message.includes('fetch')))errMsg+='通信エラーです。ネットワークを確認してください。';
     else errMsg+='もう一度お試しいただくか、画像を撮り直してください。';
     status.textContent=errMsg;
