@@ -923,19 +923,13 @@ const EMPLOYEES=[
 ];
 
 // ===== 静的データ =====
-// 曜日ごとの固定メニュー（0=日,1=月,2=火,3=水,4=木,5=金,6=土）
-const WEEKLY_MENU={
-  1:[{id:1,name:'生姜焼き弁当',      emoji:'🥩',price:650},{id:2,name:'鶏の甘酢あん弁当',      emoji:'🍗',price:650}],
-  2:[{id:1,name:'豚スタミナ弁当',     emoji:'🥓',price:650},{id:2,name:'チキン南蛮弁当',         emoji:'🍗',price:650}],
-  3:[{id:1,name:'ホイコーロー弁当',   emoji:'🥦',price:650},{id:2,name:'ふーorゴーヤチャンプル弁当',emoji:'🌿',price:650}],
-  4:[{id:1,name:'豚黒コショウ弁当',   emoji:'🌶',price:650},{id:2,name:'チンジャオロース弁当',   emoji:'🥩',price:650}],
-  5:[{id:1,name:'酢豚弁当',          emoji:'🍖',price:650},{id:2,name:'鶏と青菜と卵弁当',       emoji:'🥗',price:650}],
-  6:[{id:1,name:'肉野菜炒め弁当',    emoji:'🥦',price:650},{id:2,name:'白身魚甘酢あん弁当',    emoji:'🐟',price:650}],
-  0:null, // 日曜定休
-};
+const BENTOS=[
+  {id:1,name:'日替わり弁当',emoji:'🍱',price:650,daily:true},
+  {id:2,name:'唐揚げ弁当',emoji:'🍗',price:650,daily:false},
+  {id:3,name:'生姜焼き弁当',emoji:'🥩',price:650,daily:false},
+  {id:4,name:'照り焼きチキン弁当',emoji:'🍖',price:650,daily:false},
+];
 const OOMORI=50;
-// 後方互換性（既存コードが参照する場合）
-const BENTOS=[];
 const ADMIN_PASSWORD_HASH='cd0532843c18ae155a42a76e29bd6805c37526e5a3498936c6e1951fb548bbfc';
 
 const MARCH_MENU={
@@ -1057,27 +1051,22 @@ function isHistoryLocked(){
   const d=now(),h=d.getHours(),m=d.getMinutes();
   return (h===8&&m>=35)||(h>=9&&h<12);
 }
-// 注文対象日を返す（14時以降は翌日分、月〜土営業）
+// 注文対象日を返す（13時以降は翌日分）
 function orderTargetDate(){
   const d=now();
   const target=new Date(d);
-  if(d.getHours()>=14) target.setDate(target.getDate()+1);
-  // 日曜はスキップして次の月曜へ
-  while(target.getDay()===0) target.setDate(target.getDate()+1);
+  if(d.getHours()>=12) target.setDate(target.getDate()+1);
+  // 土日はスキップして次の平日へ
+  while(target.getDay()===0||target.getDay()===6) target.setDate(target.getDate()+1);
   return target;
 }
-// 翌営業日（日曜スキップ）
-function getNextBusinessDay(base){
-  const next=new Date(base);
-  next.setDate(next.getDate()+1);
-  while(next.getDay()===0) next.setDate(next.getDate()+1);
-  return next;
-}
 function getNextOrderOpenLabel(){
-  const next=getNextBusinessDay(now());
+  const next=new Date(now());
+  next.setDate(next.getDate()+1);
+  while(next.getDay()===0||next.getDay()===6) next.setDate(next.getDate()+1);
   const openDay=new Date(next);
   openDay.setDate(openDay.getDate()-1);
-  return DOW[openDay.getDay()]+'曜日 14:00 〜';
+  return DOW[openDay.getDay()]+'曜日 12:00 〜';
 }
 function orderTargetKey(){return dateKey(orderTargetDate());}
 function orderTargetLabel(){
@@ -1115,8 +1104,8 @@ function renderHeader(){
   }else if(isClosed()){
     // 締切中：13:00までのカウントダウン
     bar.className='status-bar closed';dot.className='status-dot red';
-    const dl=new Date();dl.setHours(14,0,0,0);
-    if(dl<=d)dl.setDate(dl.getDate()+1); // 翌日14:00
+    const dl=new Date();dl.setHours(12,0,0,0);
+    if(dl<=d)dl.setDate(dl.getDate()+1); // 翌日12:00
     txt.textContent='締切済み — 受付開始まで';tval.textContent=fmtCountdown(dl-d);
   }else if(h<8||(h===8&&m<35)){
     // 当日受付中：8:35までのカウントダウン
@@ -1124,7 +1113,7 @@ function renderHeader(){
     const dl=new Date();dl.setHours(8,35,0,0);
     txt.textContent='受付中 — 締切まで';tval.textContent=fmtCountdown(dl-d);
   }else{
-    // 14時以降：翌日分受付中
+    // 13時以降：翌日分受付中
     bar.className='status-bar open';dot.className='status-dot green';
     const target=orderTargetLabel();
     txt.textContent=`受付中 — ${target}`;tval.textContent='';
@@ -1249,65 +1238,35 @@ function renderTodayMenu(){
 }
 
 // ===== BENTO LIST =====
-function getTodayBentos(){
-  const d=orderTargetDate();
-  return WEEKLY_MENU[d.getDay()]||[];
-}
-function getTomorrowBentos(){
-  const d=getNextBusinessDay(orderTargetDate());
-  return WEEKLY_MENU[d.getDay()]||[];
-}
 function renderBentoList(){
-  const bentos=getTodayBentos();
-  const targetDate=orderTargetDate();
-  const isAfter14=now().getHours()>=14;
-
-  // 翌日メニュープレビュー
-  const tomorrowBentos=getTomorrowBentos();
-  const tomorrowDate=getNextBusinessDay(targetDate);
-  const tomorrowLabel=DOW[tomorrowDate.getDay()]+'曜日';
-  const previewHtml=tomorrowBentos.length?`
-  <div id="tomorrow-preview" style="background:linear-gradient(135deg,#FFF8F0,#FEF0E0);border:1.5px solid #F4C89A;border-radius:14px;padding:12px 14px;margin-bottom:16px;">
-    <div style="font-size:0.72rem;font-weight:700;color:#C86020;margin-bottom:6px;">🌅 明日（${tomorrowLabel}）のメニュー</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      ${tomorrowBentos.map(b=>`<span style="font-size:0.78rem;background:white;border:1px solid #F4C89A;border-radius:8px;padding:3px 10px;color:#5A3010;">${b.emoji} ${b.name}</span>`).join('')}
-    </div>
-  </div>`:'';
-
-  // 本日（または翌日）メニュー
-  const targetLabel=isAfter14?'翌日':'本日';
-  const dowLabel=DOW[targetDate.getDay()]+'曜日';
-  const bListHtml=bentos.map(b=>`
-    <div class="bento-card" id="card-${b.id}">
+  const menu=getTodayMenu();
+  document.getElementById('bento-list').innerHTML=BENTOS.map(b=>{
+    let detail='';
+    if(b.daily){
+      if(menu&&menu.main) detail=`<div class="bento-menu-detail">🍽 ${menu.main}<br><span style="font-size:0.67rem">${(menu.sides||[]).join(' ／ ')}</span></div>`;
+      else if(menu&&menu.holiday) detail=`<div class="bento-menu-detail" style="color:var(--text-sub)">🎌 ${menu.holiday}（お休み）</div>`;
+      else detail=`<div class="bento-menu-detail" style="color:var(--text-sub)">本日のメニューは未定です</div>`;
+    }
+    return `<div class="bento-card" id="card-${b.id}">
       <div class="bento-top">
         <div class="bento-num">${b.id}</div>
-        <div><div class="bento-name">${b.emoji} ${b.name}</div>
-        <div class="bento-price-tag">通常 ${b.price}円 ／ 大盛り ${b.price+OOMORI}円</div></div>
+        <div><div class="bento-name">${b.emoji} ${b.name}</div><div class="bento-price-tag">通常 ${b.price}円 ／ 大盛り ${b.price+OOMORI}円</div></div>
       </div>
+      ${detail}
       <div class="bento-opts">
         <button class="opt-btn" id="opt-${b.id}-0" onclick="selectOpt(${b.id},false)">普通盛り<span class="opt-sub">${b.price}円</span></button>
         <button class="opt-btn" id="opt-${b.id}-1" onclick="selectOpt(${b.id},true)">大盛り<span class="opt-sub">${b.price+OOMORI}円</span></button>
       </div>
-    </div>`).join('');
-
-  const wrapper=document.getElementById('bento-list');
-  if(!wrapper)return;
-  wrapper.innerHTML=`
-    ${previewHtml}
-    <div style="font-size:0.8rem;font-weight:700;color:var(--text-sub);margin-bottom:10px;">
-      📅 ${targetLabel}のお弁当（${dowLabel}）
-    </div>
-    ${bListHtml}`;
+    </div>`;
+  }).join('');
 }
 
 function selectOpt(bentoId,oomori){
   document.querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('selected'));
   document.querySelectorAll('.bento-card').forEach(c=>c.classList.remove('selected'));
   selectedBento={bentoId,oomori};
-  const btn=document.getElementById(`opt-${bentoId}-${oomori?1:0}`);
-  const card=document.getElementById(`card-${bentoId}`);
-  if(btn)btn.classList.add('selected');
-  if(card)card.classList.add('selected');
+  document.getElementById(`opt-${bentoId}-${oomori?1:0}`).classList.add('selected');
+  document.getElementById(`card-${bentoId}`).classList.add('selected');
 }
 
 // ===== CART =====
