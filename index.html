@@ -218,7 +218,6 @@ header{background:var(--primary);color:white;padding:calc(14px + env(safe-area-i
 #holiday-notice.active + #order-form-area { display: none !important; }
 .toast{position:fixed;bottom:calc(70px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:#1C1008;color:white;padding:10px 20px;border-radius:28px;font-size:0.8rem;font-weight:700;opacity:0;transition:all 0.28s;z-index:9999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.3);}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-.toast.error{background:#b83232;white-space:normal;max-width:90vw;text-align:center;line-height:1.5;padding:12px 20px;}
 
 @keyframes fadeOverlay{
   0%{opacity:0;transform:scale(0.8);}
@@ -296,24 +295,12 @@ header{background:var(--primary);color:white;padding:calc(14px + env(safe-area-i
         <div class="ss">登野城漁港内</div>
         <div class="dv"><div class="dl"></div><div class="dd"></div><div class="dl"></div></div>
         <div class="cd">土日・祝日はお休みです<br>Closed on weekends &amp; holidays</div>
-        <div class="no">🗓 次の注文受付 &nbsp;—&nbsp; <span id="next-open-label">月曜日 12:00 〜</span></div>
+        <div class="no">🗓 次の注文受付 &nbsp;—&nbsp; <span id="next-open-day">12:00 〜</span></div>
       </div>
     </div>
 
     <!-- 通常の注文フォーム -->
     <div id="order-form-area">
-
-      <!-- 注文済みバナー -->
-      <div id="order-status-banner" style="display:none;background:linear-gradient(135deg,#1a7a3a 0%,#22a44f 100%);border-radius:16px;padding:18px 20px;margin-bottom:18px;color:#fff;display:none;align-items:center;gap:16px;box-shadow:0 4px 18px rgba(26,122,58,0.35);position:relative;overflow:hidden;">
-        <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;background:rgba(255,255,255,0.08);border-radius:50%;pointer-events:none;"></div>
-        <div style="font-size:2.4rem;line-height:1;flex-shrink:0;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));">✅</div>
-        <div style="flex:1;">
-          <div id="order-status-name" style="font-size:0.78rem;opacity:0.9;margin-bottom:2px;font-weight:500;"></div>
-          <div style="font-family:'Kaisei Decol',serif;font-size:1.05rem;font-weight:700;letter-spacing:0.02em;margin-bottom:4px;white-space:nowrap;">今日は注文済みです</div>
-          <div id="order-status-detail" style="font-size:0.75rem;opacity:0.88;"></div>
-        </div>
-      </div>
-
       <div class="today-menu-card" id="today-menu-card"></div>
 
       <!-- 名前選択 -->
@@ -335,8 +322,11 @@ header{background:var(--primary);color:white;padding:calc(14px + env(safe-area-i
       <!-- カート -->
       <div class="cart-area" id="cart-area"></div>
 
+      <div style="background:#FFF8E8;border:2px solid #F4A636;border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:0.85rem;color:#7A5800;text-align:center;line-height:1.7;">
+        ※平良商店さんの希望により、注文は日替わり弁当一択でお願い致します🙇
+      </div>
       <div class="submit-area">
-        <button class="submit-btn" id="order-submit-btn" onclick="orderAndSubmit()">✅ 注文を確定する</button>
+        <button class="submit-btn" onclick="orderAndSubmit()">✅ 注文を確定する</button>
       </div>
     </div>
   </div>
@@ -446,29 +436,53 @@ header{background:var(--primary);color:white;padding:calc(14px + env(safe-area-i
         <select class="month-select" id="admin-month-select" onchange="renderAdminSummary()" style="width:100%;margin-bottom:14px;"></select>
         <div id="admin-name-summary"></div>
       </div>
-
-      <!-- 当日注文の編集・追加 -->
-      <div style="background:#FFF8E8;border:2px solid #E8A000;border-radius:14px;padding:14px 15px;margin-bottom:14px;">
-        <div style="font-size:0.8rem;font-weight:700;color:#B87800;margin-bottom:4px;">📝 当日注文の編集・追加</div>
-        <div style="font-size:0.72rem;color:var(--text-sub);margin-bottom:10px;">8:35以降でも管理者は注文の追加・削除が可能です</div>
-        <div id="admin-today-orders" style="margin-bottom:12px;max-height:280px;overflow-y:auto;"></div>
-        <div style="border-top:1px solid var(--border);padding-top:12px;">
-          <div style="font-size:0.75rem;font-weight:700;color:var(--text-sub);margin-bottom:8px;">＋ 注文を追加</div>
-          <div class="name-search-box" style="margin-bottom:8px;">
-            <input class="name-search-input" id="admin-add-name" type="text"
-              placeholder="お名前（名前 or フリガナで検索...）"
-              autocomplete="off" oninput="onAdminNameInput()" onfocus="onAdminNameFocus()" onblur="onAdminNameBlur()" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;-webkit-appearance:none;box-sizing:border-box;">
-            <button class="name-search-clear" onclick="clearAdminNameInput()" tabindex="-1">✕</button>
-            <div class="name-dropdown" id="admin-name-dropdown"></div>
-          </div>
-          <select id="admin-add-bento" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;background:white;outline:none;-webkit-appearance:none;margin-bottom:8px;box-sizing:border-box;">
-          </select>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-            <button id="admin-oomori-no" onclick="adminSetOomori(false)" style="padding:11px;background:var(--primary);color:white;border:2px solid var(--primary);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">普通盛り ¥650</button>
-            <button id="admin-oomori-yes" onclick="adminSetOomori(true)" style="padding:11px;background:white;color:var(--text-sub);border:2px solid var(--border);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">大盛り ¥700</button>
-          </div>
-          <button id="admin-add-btn" onclick="adminAddOrder()" style="width:100%;padding:13px;background:linear-gradient(135deg,#E8A000,#C87800);color:white;border:none;border-radius:13px;font-family:'Kaisei Decol',serif;font-size:0.95rem;font-weight:700;cursor:pointer;min-height:50px;">＋ 追加する</button>
+      <!-- Slack Webhook設定 -->
+      <div style="background:#F8F0FF;border:2px solid #6B3FA0;border-radius:14px;padding:14px 15px;margin-bottom:14px;">
+        <div style="font-size:0.8rem;font-weight:700;color:#6B3FA0;margin-bottom:6px;">
+          <svg style="width:16px;height:16px;vertical-align:middle;margin-right:4px;" viewBox="0 0 24 24" fill="#6B3FA0"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zm1.271 0a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zm0 1.271a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zm10.122 2.521a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zm-1.268 0a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zm-2.523 10.122a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zm0-1.268a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/></svg>
+          Slack 自動通知設定
         </div>
+        <div style="font-size:0.74rem;color:var(--text-sub);line-height:1.6;margin-bottom:10px;">
+          Webhook URLを設定すると、LINEと同時にSlackにも自動送信されます。<br>
+          注文・月次どちらも対応しています。
+        </div>
+        <input id="slack-webhook-input" type="url" placeholder="https://hooks.slack.com/services/..." style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;-webkit-appearance:none;margin-bottom:8px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <button onclick="saveSlackWebhookSetting()" style="padding:11px;background:#6B3FA0;color:white;border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">💾 保存</button>
+          <button onclick="testSlackWebhook()" style="padding:11px;background:white;color:#6B3FA0;border:2px solid #6B3FA0;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">🧪 テスト送信</button>
+        </div>
+        <button onclick="clearSlackWebhook()" style="width:100%;padding:9px;background:white;color:var(--text-sub);border:2px solid var(--border);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;min-height:40px;">🗑️ クリア</button>
+        <div id="slack-status" style="margin-top:8px;font-size:0.76rem;text-align:center;"></div>
+      </div>
+
+      <!-- アプリ公開URL設定 -->
+      <div style="background:#FFF8E8;border:2px solid var(--accent);border-radius:14px;padding:14px 15px;margin-bottom:14px;">
+        <div style="font-size:0.8rem;font-weight:700;color:#B87800;margin-bottom:6px;">🌐 アプリ公開URL設定</div>
+        <div style="font-size:0.74rem;color:var(--text-sub);line-height:1.6;margin-bottom:10px;">
+          GitHub PagesなどでアプリをURLで公開した場合に設定してください。<br>
+          月次LINEメッセージに納品書確認リンクとして自動で追加されます。
+        </div>
+        <input id="app-public-url-input" type="url" placeholder="https://あなたのID.github.io/bento-order/" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;-webkit-appearance:none;margin-bottom:8px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button onclick="saveAppPublicUrlSetting()" style="padding:11px;background:var(--accent);color:white;border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">💾 保存</button>
+          <button onclick="clearAppPublicUrl()" style="padding:11px;background:white;color:var(--text-sub);border:2px solid var(--border);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">🗑️ クリア</button>
+        </div>
+        <div id="app-url-status" style="margin-top:8px;font-size:0.76rem;text-align:center;"></div>
+      </div>
+
+      <!-- LINE グループURL設定 -->
+      <div style="background:#F0FFF5;border:2px solid var(--green);border-radius:14px;padding:14px 15px;margin-bottom:14px;">
+        <div style="font-size:0.8rem;font-weight:700;color:var(--accent2);margin-bottom:6px;">💬 LINEグループURL設定</div>
+        <div style="font-size:0.74rem;color:var(--text-sub);line-height:1.6;margin-bottom:10px;">
+          グループURLを設定すると、注文内容が自動コピーされてグループが開きます。<br>
+          あとは貼り付けて送信ボタンを押すだけ！
+        </div>
+        <input id="line-group-url-input" type="url" placeholder="https://line.me/R/ti/g/..." style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;-webkit-appearance:none;margin-bottom:8px;" value="">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button onclick="saveLineGroupUrlSetting()" style="padding:11px;background:var(--green);color:white;border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">💾 保存</button>
+          <button onclick="clearLineGroupUrl()" style="padding:11px;background:white;color:var(--text-sub);border:2px solid var(--border);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">🗑️ クリア</button>
+        </div>
+        <div id="line-group-status" style="margin-top:8px;font-size:0.76rem;text-align:center;"></div>
       </div>
 
       <button class="csv-btn" onclick="exportCSV()">📥 CSVエクスポート（○○月弁当注文集計）</button>
@@ -481,15 +495,13 @@ header{background:var(--primary);color:white;padding:calc(14px + env(safe-area-i
         <div style="background:linear-gradient(135deg,#EEF4FF,#E8F0FC);border:2px solid var(--blue);border-radius:14px;padding:14px 15px;margin-bottom:16px;">
           <div style="font-size:0.8rem;font-weight:700;color:var(--blue);margin-bottom:6px;">🤖 AIでカレンダーを自動読み取り</div>
           <div style="font-size:0.74rem;color:var(--text-sub);margin-bottom:12px;line-height:1.6;">
-            平良商店さんのカレンダー画像をアップするだけで、<br>全メニューを自動登録します<br><span style="color:#E53935;font-weight:700;">※ 写真・スクリーンショット対応（PDF不可）</span>
+            平良商店さんのカレンダー画像またはPDFをアップするだけで、<br>全メニューを自動登録します
           </div>
-          <!-- APIキー簡易入力エリア -->
-          <div id="ai-key-area" style="margin-bottom:12px;"></div>
-          <label for="ai-calendar-input" id="ai-upload-area" style="display:block;border:2px dashed #B8CFF0;border-radius:12px;padding:18px;text-align:center;cursor:pointer;background:white;margin-bottom:10px;transition:all 0.2s;">
+          <div id="ai-upload-area" onclick="document.getElementById('ai-calendar-input').click()" style="border:2px dashed #B8CFF0;border-radius:12px;padding:18px;text-align:center;cursor:pointer;background:white;margin-bottom:10px;transition:all 0.2s;">
             <div style="font-size:1.8rem;margin-bottom:6px;">📷</div>
-            <div style="font-size:0.84rem;font-weight:700;color:var(--blue);">カレンダー画像を選択</div>
-            <div style="font-size:0.7rem;color:var(--text-sub);margin-top:3px;">JPG・PNG・HEIC など全形式対応</div>
-          </label>
+            <div style="font-size:0.84rem;font-weight:700;color:var(--blue);">カレンダー画像・PDFを選択</div>
+            <div style="font-size:0.7rem;color:var(--text-sub);margin-top:3px;">JPG / PNG 対応（カレンダーを写真で撮影してください）</div>
+          </div>
 
           <div id="ai-preview-area" style="display:none;margin-bottom:10px;">
             <img id="ai-preview-img" src="" style="width:100%;border-radius:10px;border:1px solid var(--border);" alt="カレンダープレビュー">
@@ -527,83 +539,7 @@ header{background:var(--primary);color:white;padding:calc(14px + env(safe-area-i
         </div>
       </div>
 
-      <!-- 詳細設定（折りたたみ） -->
-      <div style="margin-bottom:14px;">
-        <button onclick="toggleAdvancedSettings()" id="advanced-settings-toggle" style="width:100%;padding:11px 14px;background:#f5f5f5;border:2px solid var(--border);border-radius:12px;font-family:'Noto Sans JP',sans-serif;font-size:0.82rem;font-weight:700;color:var(--text-sub);cursor:pointer;display:flex;justify-content:space-between;align-items:center;min-height:44px;">
-          <span>⚙️ 詳細設定（Slack・LINE・URL・APIキー）</span>
-          <span id="advanced-settings-arrow" style="font-size:0.75rem;">▶</span>
-        </button>
-        <div id="advanced-settings-area" style="display:none;margin-top:10px;">
-
-          <!-- Slack Webhook設定 -->
-          <div style="background:#F8F0FF;border:2px solid #6B3FA0;border-radius:14px;padding:14px 15px;margin-bottom:14px;">
-            <div style="font-size:0.8rem;font-weight:700;color:#6B3FA0;margin-bottom:6px;">
-              <svg style="width:16px;height:16px;vertical-align:middle;margin-right:4px;" viewBox="0 0 24 24" fill="#6B3FA0"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zm1.271 0a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zm0 1.271a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zm10.122 2.521a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zm-1.268 0a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zm-2.523 10.122a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zm0-1.268a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/></svg>
-              Slack 自動通知設定
-            </div>
-            <div style="font-size:0.74rem;color:var(--text-sub);line-height:1.6;margin-bottom:10px;">
-              Webhook URLを設定すると、LINEと同時にSlackにも自動送信されます。<br>
-              注文・月次どちらも対応しています。
-            </div>
-            <input id="slack-webhook-input" type="url" placeholder="https://hooks.slack.com/services/..." style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;-webkit-appearance:none;margin-bottom:8px;">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-              <button onclick="saveSlackWebhookSetting()" style="padding:11px;background:#6B3FA0;color:white;border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">💾 保存</button>
-              <button onclick="testSlackWebhook()" style="padding:11px;background:white;color:#6B3FA0;border:2px solid #6B3FA0;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">🧪 テスト送信</button>
-            </div>
-            <button onclick="clearSlackWebhook()" style="width:100%;padding:9px;background:white;color:var(--text-sub);border:2px solid var(--border);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;min-height:40px;">🗑️ クリア</button>
-            <div id="slack-status" style="margin-top:8px;font-size:0.76rem;text-align:center;"></div>
-          </div>
-
-          <!-- LINE グループURL設定 -->
-          <div style="background:#F0FFF5;border:2px solid var(--green);border-radius:14px;padding:14px 15px;margin-bottom:14px;">
-            <div style="font-size:0.8rem;font-weight:700;color:var(--accent2);margin-bottom:6px;">💬 LINEグループURL設定</div>
-            <div style="font-size:0.74rem;color:var(--text-sub);line-height:1.6;margin-bottom:10px;">
-              グループURLを設定すると、注文内容が自動コピーされてグループが開きます。<br>
-              あとは貼り付けて送信ボタンを押すだけ！
-            </div>
-            <input id="line-group-url-input" type="url" placeholder="https://line.me/R/ti/g/..." style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;-webkit-appearance:none;margin-bottom:8px;" value="">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-              <button onclick="saveLineGroupUrlSetting()" style="padding:11px;background:var(--green);color:white;border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">💾 保存</button>
-              <button onclick="clearLineGroupUrl()" style="padding:11px;background:white;color:var(--text-sub);border:2px solid var(--border);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">🗑️ クリア</button>
-            </div>
-            <div id="line-group-status" style="margin-top:8px;font-size:0.76rem;text-align:center;"></div>
-          </div>
-
-          <!-- アプリ公開URL設定 -->
-          <div style="background:#FFF8E8;border:2px solid var(--accent);border-radius:14px;padding:14px 15px;margin-bottom:14px;">
-            <div style="font-size:0.8rem;font-weight:700;color:#B87800;margin-bottom:6px;">🌐 アプリ公開URL設定</div>
-            <div style="font-size:0.74rem;color:var(--text-sub);line-height:1.6;margin-bottom:10px;">
-              GitHub PagesなどでアプリをURLで公開した場合に設定してください。<br>
-              月次LINEメッセージに納品書確認リンクとして自動で追加されます。
-            </div>
-            <input id="app-public-url-input" type="url" placeholder="https://あなたのID.github.io/bento-order/" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;-webkit-appearance:none;margin-bottom:8px;">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-              <button onclick="saveAppPublicUrlSetting()" style="padding:11px;background:var(--accent);color:white;border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">💾 保存</button>
-              <button onclick="clearAppPublicUrl()" style="padding:11px;background:white;color:var(--text-sub);border:2px solid var(--border);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">🗑️ クリア</button>
-            </div>
-            <div id="app-url-status" style="margin-top:8px;font-size:0.76rem;text-align:center;"></div>
-          </div>
-
-          <!-- Groq APIキー設定 -->
-          <div style="background:#EEF4FF;border:2px solid var(--blue);border-radius:14px;padding:14px 15px;margin-bottom:14px;">
-            <div style="font-size:0.8rem;font-weight:700;color:var(--blue);margin-bottom:6px;">🤖 Groq APIキー設定（無料）</div>
-            <div style="font-size:0.74rem;color:var(--text-sub);line-height:1.6;margin-bottom:10px;">
-              console.groq.com で取得した無料のAPIキーを設定してください。<br>
-              カレンダー自動読み取り機能に使用します。
-            </div>
-            <input id="gemini-api-key-input" type="password" placeholder="gsk_..." style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:'Noto Sans JP',sans-serif;outline:none;-webkit-appearance:none;margin-bottom:8px;">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-              <button onclick="saveGeminiApiKeySetting()" style="padding:11px;background:var(--blue);color:white;border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">💾 保存</button>
-              <button onclick="clearGeminiApiKey()" style="padding:11px;background:white;color:var(--text-sub);border:2px solid var(--border);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">🗑️ クリア</button>
-            </div>
-            <div id="gemini-key-status" style="margin-top:8px;font-size:0.76rem;text-align:center;"></div>
-          </div>
-
-          <!-- 全データリセット -->
-          <button class="reset-btn" onclick="adminResetAll()" style="width:100%;border-color:#C8401A;color:#C8401A;margin-top:6px;">⚠️ 全データをリセット</button>
-
-        </div>
-      </div>
+      <button class="reset-btn" onclick="adminResetAll()" style="border-color:#C8401A;color:#C8401A;margin-top:16px;">⚠️ 全データをリセット</button>
       <div style="margin-top:16px;text-align:center;font-size:0.72rem;color:var(--text-sub);padding:10px;background:#f9f9f9;border-radius:8px;">
         🔄 アプリバージョン：<span style="font-family:monospace;font-weight:700;">20260331143453</span><br>
         <span style="font-size:0.65rem;opacity:0.7;">GitHubに更新するたびに番号が変わります</span>
@@ -628,13 +564,9 @@ header{background:var(--primary);color:white;padding:calc(14px + env(safe-area-i
         <div style="font-size:0.72rem;opacity:0.85;margin-top:3px;" id="vendor-header-sub"></div>
         <div style="font-size:0.65rem;opacity:0.7;margin-top:2px;" id="vendor-last-updated"></div>
       </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
         <button onclick="vendorManualRefresh()" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:white;border-radius:8px;padding:5px 10px;font-size:0.7rem;font-family:'Noto Sans JP',sans-serif;cursor:pointer;white-space:nowrap;">🔄 更新</button>
-        <div style="display:flex;align-items:center;gap:4px;">
-          <button onclick="changeVendorMonth(-1)" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:white;border-radius:8px;padding:4px 10px;font-size:0.85rem;font-family:'Noto Sans JP',sans-serif;cursor:pointer;line-height:1;">◀</button>
-          <span id="vendor-month-label" style="font-size:0.78rem;font-weight:700;color:white;white-space:nowrap;padding:0 4px;"></span>
-          <button onclick="changeVendorMonth(1)" id="vendor-month-next-btn" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:white;border-radius:8px;padding:4px 10px;font-size:0.85rem;font-family:'Noto Sans JP',sans-serif;cursor:pointer;line-height:1;">▶</button>
-        </div>
+
       </div>
     </div>
   </div>
@@ -648,7 +580,7 @@ header{background:var(--primary);color:white;padding:calc(14px + env(safe-area-i
 
 <div class="toast" id="toast"></div>
 <!-- AI カレンダー入力（常にDOM上に存在させる） -->
-<input type="file" id="ai-calendar-input" accept="image/*" style="opacity:0;position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;">
+<input type="file" id="ai-calendar-input" accept="image/*" style="display:none;position:fixed;top:-9999px;">
 
 <script>
 // ===== SUPABASE 設定 =====
@@ -675,18 +607,20 @@ async function sbFetch(path, method='GET', body=null){
   return text?JSON.parse(text):[];
 }
 
-// 注文をSupabaseに保存（失敗時は例外をそのまま投げる）
+// 注文をSupabaseに保存
 async function saveOrderToCloud(order){
-  await sbFetch('orders', 'POST', {
-    date: order.date,
-    name: order.name,
-    bento_id: order.bentoId,
-    bento_name: order.bentoName,
-    emoji: order.emoji,
-    oomori: order.oomori,
-    price: order.price,
-    time: order.time
-  });
+  try{
+    await sbFetch('orders', 'POST', {
+      date: order.date,
+      name: order.name,
+      bento_id: order.bentoId,
+      bento_name: order.bentoName,
+      emoji: order.emoji,
+      oomori: order.oomori,
+      price: order.price,
+      time: order.time
+    });
+  }catch(e){ console.error('クラウド保存エラー:', e); }
 }
 
 // 当日の注文をSupabaseから読み込む
@@ -735,42 +669,6 @@ async function saveDailyHistoryToCloud(dateKey, entry){
       });
     }catch(e2){ console.error('月次クラウド保存エラー:', e2); }
   }
-}
-
-// ===== アプリ設定のクラウド保存・読み込み =====
-async function saveSettingsToCloud(){
-  const settings={
-    groqApiKey: groqApiKey||'',
-    slackWebhookUrl: slackWebhookUrl||'',
-    lineGroupUrl: lineGroupUrl||''
-  };
-  try{
-    // まずPOSTを試み、既存なら PATCH
-    await sbFetch('daily_history','POST',{
-      date_key:'_settings_v1',
-      total:0, count:0,
-      summary:[settings],
-      orders:[]
-    });
-  }catch(e){
-    try{
-      await sbFetch('daily_history?date_key=eq._settings_v1','PATCH',{
-        summary:[settings]
-      });
-    }catch(e2){ console.error('設定クラウド保存エラー:',e2); }
-  }
-}
-async function loadSettingsFromCloud(){
-  try{
-    const rows=await sbFetch('daily_history?date_key=eq._settings_v1');
-    if(rows&&rows.length>0&&rows[0].summary&&rows[0].summary.length>0){
-      const s=rows[0].summary[0];
-      // クラウドの値がある場合のみ上書き（localStorageの値を優先しない）
-      if(s.groqApiKey)    { groqApiKey=s.groqApiKey;     localStorage.setItem('bento_groq_api_key',groqApiKey); }
-      if(s.slackWebhookUrl){ slackWebhookUrl=s.slackWebhookUrl; localStorage.setItem('bento_slack_webhook',slackWebhookUrl); }
-      if(s.lineGroupUrl)  { lineGroupUrl=s.lineGroupUrl;  localStorage.setItem('bento_line_group_url',lineGroupUrl); }
-    }
-  }catch(e){ console.error('設定クラウド読み込みエラー:',e); }
 }
 
 // ===== 画像圧縮 =====
@@ -836,15 +734,13 @@ async function saveReceiptToCloud(dateKey, dataUrl){
   }
 }
 
-// 一覧はメタ情報（日付・保存日時）のみ取得。画像本体はタップ時に個別取得（通信量削減）
 async function loadReceiptsFromCloud(){
   try{
-    const rows=await sbFetch('receipts?select=date_key,saved_at&order=date_key.asc');
+    const rows=await sbFetch('receipts?order=date_key.asc');
     const result={};
     rows.forEach(r=>{
-      const cached=(typeof receipts!=='undefined'&&receipts[r.date_key]&&receipts[r.date_key].dataUrl)?receipts[r.date_key].dataUrl:null;
       result[r.date_key]={
-        dataUrl: cached,
+        dataUrl: r.image_data,
         savedAt: r.saved_at
       };
     });
@@ -852,17 +748,6 @@ async function loadReceiptsFromCloud(){
   }catch(e){
     console.error('納品書クラウド読み込みエラー:',e);
     return {};
-  }
-}
-
-// 納品書画像を1枚だけ取得（タップ時に呼ばれる）
-async function loadReceiptImageFromCloud(dateKey){
-  try{
-    const rows=await sbFetch(`receipts?date_key=eq.${dateKey}&select=image_data`);
-    return rows.length>0?rows[0].image_data:null;
-  }catch(e){
-    console.error('納品書画像読み込みエラー:',e);
-    return null;
   }
 }
 
@@ -918,19 +803,19 @@ const EMPLOYEES=[
   {name:'東上里加代子',kana:'ヒガシウエザト カヨコ'},
   {name:'東上里 高聖',kana:'ヒガシウエザト タカセ'},
   {name:'高林 葵',    kana:'タカバヤシ アオイ'},
+  {name:'長濵 菜々美',kana:'ナガハマ ナナミ'},
   {name:'東上里 汰生',kana:'ヒガシウエザト タオ'},
-  {name:'古林 匠',    kana:'コバヤシ タクミ'},
 ];
 
 // ===== 静的データ =====
 const BENTOS=[
-  {id:1,name:'日替わり弁当',emoji:'🍱',price:650,daily:true},
-  {id:2,name:'唐揚げ弁当',emoji:'🍗',price:650,daily:false},
-  {id:3,name:'生姜焼き弁当',emoji:'🥩',price:650,daily:false},
-  {id:4,name:'照り焼きチキン弁当',emoji:'🍖',price:650,daily:false},
+  {id:1,name:'日替わり弁当',emoji:'🍱',price:650,daily:true,hidden:false},
+  {id:2,name:'唐揚げ弁当',emoji:'🍗',price:650,daily:false,hidden:true},
+  {id:3,name:'生姜焼き弁当',emoji:'🥩',price:650,daily:false,hidden:true},
+  {id:4,name:'照り焼きチキン弁当',emoji:'🍖',price:650,daily:false,hidden:true},
 ];
 const OOMORI=50;
-const ADMIN_PASSWORD_HASH='cd0532843c18ae155a42a76e29bd6805c37526e5a3498936c6e1951fb548bbfc';
+const ADMIN_PASSWORD='uezato3028';
 
 const MARCH_MENU={
   2:{main:'手作り白身魚フライ',sides:['麩チャンプルー','鶏と冬瓜の煮物','切り干し大根炊いたん']},
@@ -965,7 +850,6 @@ let menuData={};  // { 'YYYY-MM': { day: { main:'', sides:[], holiday:'' } } }
 let lineGroupUrl='https://line.me/R/ti/g/YyJbDV646D';  // LINEグループURL（デフォルト値）
 let orderLocked=false;  // LINEで送信後はtrue
 let slackWebhookUrl='';  // Slack Webhook URL
-let groqApiKey='';    // Groq API Key
 let appPublicUrl='';    // アプリの公開URL（GitHub Pages等）
 let cart=[];           // [{name,bentoId,bentoName,emoji,oomori,price}]
 let selectedName='';
@@ -982,28 +866,18 @@ function loadState(){
   try{receipts=JSON.parse(localStorage.getItem('bento_receipts')||'{}');}catch(e){receipts={};}
   try{menuData=JSON.parse(localStorage.getItem('bento_menu_data')||'{}');}catch(e){menuData={};}
   lineGroupUrl=localStorage.getItem('bento_line_group_url')||lineGroupUrl;
-  const lockedKey='order_locked_'+orderTargetKey();
+  const lockedKey='order_locked_'+dateKey();
   orderLocked=localStorage.getItem(lockedKey)==='1';
   slackWebhookUrl=localStorage.getItem('bento_slack_webhook')||'';
   console.log('Slack URL loaded:', slackWebhookUrl?'設定済み':'未設定');
-  groqApiKey=localStorage.getItem('bento_groq_api_key')||'';
   appPublicUrl=''; // 固定URLのみ使用
 }
-function saveLineGroupUrl(){localStorage.setItem('bento_line_group_url',lineGroupUrl);saveSettingsToCloud();}
-function saveSlackWebhook(){localStorage.setItem('bento_slack_webhook',slackWebhookUrl);saveSettingsToCloud();}
-function saveGroqApiKey(){localStorage.setItem('bento_groq_api_key',groqApiKey);saveSettingsToCloud();}
+function saveLineGroupUrl(){localStorage.setItem('bento_line_group_url',lineGroupUrl);}
+function saveSlackWebhook(){localStorage.setItem('bento_slack_webhook',slackWebhookUrl);}
 function saveAppPublicUrl(){localStorage.setItem('bento_app_public_url',appPublicUrl);}
 function saveOrders(){localStorage.setItem('bento_orders_v5',JSON.stringify(orders));}
 function saveDailyHistory(){localStorage.setItem('bento_daily_history',JSON.stringify(dailyHistory));}
-function saveReceipts(){
-  // 納品書画像はサイズが大きいためlocalStorageには保存せずクラウドのみで管理
-  try{localStorage.setItem('bento_receipts',JSON.stringify(receipts));}
-  catch(e){
-    // 容量超過の場合はlocalStorageをクリアしてクラウドから都度取得
-    try{localStorage.removeItem('bento_receipts');}catch(e2){}
-    console.log('納品書はクラウドから取得します（localStorage容量超過）');
-  }
-}
+function saveReceipts(){localStorage.setItem('bento_receipts',JSON.stringify(receipts));}
 function saveMenuData(){localStorage.setItem('bento_menu_data',JSON.stringify(menuData));}
 
 // ===== UTILS =====
@@ -1012,22 +886,20 @@ const pad=n=>String(n).padStart(2,'0');
 const DOW=['日','月','火','水','木','金','土'];
 const dateKey=(d=now())=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const fmtDate=(key)=>{const[y,m,d]=key.split('-');const dt=new Date(+y,+m-1,+d);return`${+m}月${+d}日（${DOW[dt.getDay()]}）`;};
-// 今日が土日・祝日かチェック（店舗が休業かどうか）
+// 注文対象日が土日・祝日かチェック
 function isHolidayOrWeekend(){
-  const today=now();
-  const todayDow=today.getDay();
-  const h=today.getHours();
-  // 土曜は終日休業
-  if(todayDow===6)return true;
-  // 日曜は12時前のみ休業（12時以降は翌月曜分の注文受付可能）
-  if(todayDow===0&&h<12)return true;
-  // 注文対象日（次の平日）が祝日かチェック
   const d=orderTargetDate();
+  const dow=d.getDay();
+  // 土日チェック
+  if(dow===0||dow===6)return true;
+  // カレンダー登録済みの祝日チェック
   const monthKey=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
   const day=d.getDate();
+  // menuDataから祝日チェック
   if(menuData[monthKey]&&menuData[monthKey][day]&&menuData[monthKey][day].holiday&&!menuData[monthKey][day].main){
     return true;
   }
+  // 3月のデフォルトデータから祝日チェック
   if(d.getFullYear()===2026&&d.getMonth()===2){
     const m=MARCH_MENU[day];
     if(m&&m.holiday&&!m.main)return true;
@@ -1037,36 +909,23 @@ function isHolidayOrWeekend(){
 
 function isOpen(){
   const d=now(),h=d.getHours(),m=d.getMinutes();
-  // 12:00〜翌8:34は注文可能
-  return h>=12 || h<8 || (h===8&&m<35);
+  // 12:00〜23:59 または 0:00〜8:59 は注文可能
+  return h>=12 || h<9;
 }
 function isClosed(){
   const d=now(),h=d.getHours(),m=d.getMinutes();
-  // 8:35〜11:59は受付時間外（締切済み）
-  return (h===8&&m>=35)||(h>=9&&h<12);
-}
-function isHistoryLocked(){
-  if(orderLocked) return true;
-  // 8:35〜11:59は自動ロック（当日受付締切後）
-  const d=now(),h=d.getHours(),m=d.getMinutes();
-  return (h===8&&m>=35)||(h>=9&&h<12);
+  // 9:00〜11:59 は受付時間外
+  return h>=9&&h<12;
 }
 // 注文対象日を返す（13時以降は翌日分）
 function orderTargetDate(){
   const d=now();
-  const target=new Date(d);
-  if(d.getHours()>=12) target.setDate(target.getDate()+1);
-  // 土日はスキップして次の平日へ
-  while(target.getDay()===0||target.getDay()===6) target.setDate(target.getDate()+1);
-  return target;
-}
-function getNextOrderOpenLabel(){
-  const next=new Date(now());
-  next.setDate(next.getDate()+1);
-  while(next.getDay()===0||next.getDay()===6) next.setDate(next.getDate()+1);
-  const openDay=new Date(next);
-  openDay.setDate(openDay.getDate()-1);
-  return DOW[openDay.getDay()]+'曜日 12:00 〜';
+  if(d.getHours()>=12){
+    const next=new Date(d);
+    next.setDate(next.getDate()+1);
+    return next;
+  }
+  return d;
 }
 function orderTargetKey(){return dateKey(orderTargetDate());}
 function orderTargetLabel(){
@@ -1097,11 +956,7 @@ function renderHeader(){
   document.getElementById('today-date-hdr').textContent=d.toLocaleDateString('ja-JP',{month:'long',day:'numeric',weekday:'short'});
   const bar=document.getElementById('status-bar'),dot=document.getElementById('status-dot'),txt=document.getElementById('status-text'),tval=document.getElementById('timer-val');
   const h=d.getHours(),m=d.getMinutes();
-  if(isHolidayOrWeekend()){
-    // 土日・祝日：休業中
-    bar.className='status-bar closed';dot.className='status-dot red';
-    txt.textContent=`休業中 — ${getNextOrderOpenLabel()}から受付`;tval.textContent='';
-  }else if(isClosed()){
+  if(isClosed()){
     // 締切中：13:00までのカウントダウン
     bar.className='status-bar closed';dot.className='status-dot red';
     const dl=new Date();dl.setHours(12,0,0,0);
@@ -1163,25 +1018,8 @@ function showNameDropdown(q){
   }
   dd.classList.add('open');
 }
-function renderOrderStatusBanner(){
-  const banner=document.getElementById('order-status-banner');
-  if(!banner)return;
-  const lastName=localStorage.getItem('bento_last_name')||'';
-  if(!lastName){banner.style.display='none';return;}
-  const targetKey=orderTargetKey();
-  const myOrder=orders.find(o=>o.name===lastName&&o.date===targetKey);
-  if(myOrder){
-    document.getElementById('order-status-name').textContent=lastName.split(' ').slice(-1)[0]+'さん';
-    document.getElementById('order-status-detail').textContent=
-      `${myOrder.emoji||'🍱'} ${myOrder.bentoName}${myOrder.oomori?'（大盛り）':''}　${myOrder.time}注文`;
-    banner.style.display='flex';
-  }else{
-    banner.style.display='none';
-  }
-}
 function selectName(name){
   selectedName=name;
-  localStorage.setItem('bento_last_name',name);
   document.getElementById('name-search-input').value='';
   document.getElementById('name-dropdown').classList.remove('open');
   // この月の注文合計を計算
@@ -1222,8 +1060,22 @@ function renderTodayMenu(){
   if(notice){
     if(holiday){
       notice.classList.add('active');
-      const lbl=document.getElementById('next-open-label');
-      if(lbl) lbl.textContent=getNextOrderOpenLabel();
+      // 次の注文受付日を計算（次の平日の前日12:00）
+      const nextEl=document.getElementById('next-open-day');
+      if(nextEl){
+        const d=now();
+        // 次の平日を探す
+        let nextWeekday=new Date(d);
+        nextWeekday.setDate(nextWeekday.getDate()+1);
+        while(nextWeekday.getDay()===0||nextWeekday.getDay()===6){
+          nextWeekday.setDate(nextWeekday.getDate()+1);
+        }
+        // 前日の12:00から受付開始
+        const prevDay=new Date(nextWeekday);
+        prevDay.setDate(prevDay.getDate()-1);
+        const prevDOW=DOW[prevDay.getDay()];
+        nextEl.textContent=`${prevDay.getMonth()+1}月${prevDay.getDate()}日（${prevDOW}）12:00 〜`;
+      }
     } else {
       notice.classList.remove('active');
     }
@@ -1240,7 +1092,7 @@ function renderTodayMenu(){
 // ===== BENTO LIST =====
 function renderBentoList(){
   const menu=getTodayMenu();
-  document.getElementById('bento-list').innerHTML=BENTOS.map(b=>{
+  document.getElementById('bento-list').innerHTML=BENTOS.filter(b=>!b.hidden).map(b=>{
     let detail='';
     if(b.daily){
       if(menu&&menu.main) detail=`<div class="bento-menu-detail">🍽 ${menu.main}<br><span style="font-size:0.67rem">${(menu.sides||[]).join(' ／ ')}</span></div>`;
@@ -1270,10 +1122,7 @@ function selectOpt(bentoId,oomori){
 }
 
 // ===== CART =====
-let isSubmittingOrder=false; // 連打防止フラグ（送信中はtrue）
-async function orderAndSubmit(){
-  // 連打防止：送信中は受け付けない
-  if(isSubmittingOrder){showToast('⏳ 送信中です。そのままお待ちください');return;}
+function orderAndSubmit(){
   // 休業日チェック
   if(isHolidayOrWeekend()){showToast('🏪 本日は平良商店さんがお休みです');return;}
   // 名前チェック
@@ -1282,39 +1131,31 @@ async function orderAndSubmit(){
   if(!selectedBento){showToast('⚠️ お弁当を選択してください');return;}
   // 時間チェック
   if(isClosed()){showToast('⏰ 8:35〜13:00は受付時間外です');return;}
-  // 注文1件を作成（カートは経由しない：連打時の増殖バグ対策）
+  // カートに追加
   const b=BENTOS.find(x=>x.id===selectedBento.bentoId);
+  cart.push({name:selectedName,bentoId:b.id,bentoName:b.name,emoji:b.emoji,oomori:selectedBento.oomori,price:b.price+(selectedBento.oomori?OOMORI:0)});
+  // 即確定
   const t=now().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
   const targetKey=orderTargetKey();
-  const newOrder={name:selectedName,bentoId:b.id,bentoName:b.name,emoji:b.emoji,oomori:selectedBento.oomori,price:b.price+(selectedBento.oomori?OOMORI:0),time:t,date:targetKey};
-  // 送信中はボタンを無効化
-  isSubmittingOrder=true;
-  const submitBtn=document.getElementById('order-submit-btn');
-  if(submitBtn){submitBtn.disabled=true;submitBtn.style.opacity='0.5';submitBtn.textContent='⏳ 送信中...';}
-  try{
-    // 先にクラウドへ保存し、成功してからローカルに反映（増殖・不整合防止）
-    await saveOrderToCloud(newOrder);
-    orders.push(newOrder);
-    saveOrders();updateBadge();
-    const bentoName=b.name+(selectedBento.oomori?'（大盛り）':'');
-    const targetLabel=orderTargetLabel();
-    showToast(`✅ ${newOrder.name}：${bentoName}（${targetLabel}）`);
-    showOrderedOverlay(newOrder.name, bentoName);
-    renderOrderStatusBanner();
-    // リセット
-    cart=[];renderCart();
-    document.querySelectorAll('.opt-btn').forEach(x=>x.classList.remove('selected'));
-    document.querySelectorAll('.bento-card').forEach(c=>c.classList.remove('selected'));
-    selectedBento=null;
-    // 名前はそのまま（連続注文しやすいように）
-  }catch(e){
-    showToast('⚠️ 注文の送信に失敗しました。\nネットワークを確認して再度お試しください','error',5000);
-    console.error('クラウド保存エラー:',e);
-  }finally{
-    // 成功・失敗どちらでもボタンを復帰
-    isSubmittingOrder=false;
-    if(submitBtn){submitBtn.disabled=false;submitBtn.style.opacity='';submitBtn.textContent='✅ 注文を確定する';}
-  }
+  const newOrders=[...cart];
+  newOrders.forEach(c=>{
+    orders.push({...c,time:t,date:targetKey});
+  });
+  saveOrders();updateBadge();
+  // クラウドに保存
+  const lastOrder=orders[orders.length-1];
+  saveOrderToCloud(lastOrder);
+  const name=selectedName;
+  const bentoName=b.name+(selectedBento.oomori?'（大盛り）':'');
+  const targetLabel=orderTargetLabel();
+  showToast(`✅ ${name}：${bentoName}（${targetLabel}）`);
+  showOrderedOverlay(name, bentoName);
+  // リセット
+  cart=[];renderCart();
+  document.querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('.bento-card').forEach(c=>c.classList.remove('selected'));
+  selectedBento=null;
+  // 名前はそのまま（連続注文しやすいように）
 }
 
 function showOrderedOverlay(name, bentoName){
@@ -1384,42 +1225,36 @@ function submitAllOrders(){
   if(!cart.length){showToast('⚠️ カートが空です');return;}
   if(isClosed()){showToast('⏰ 8:35〜13:00は受付時間外です');return;}
   const t=now().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
-  const targetDate=orderTargetKey();
   cart.forEach(c=>{
-    orders.push({...c,time:t,date:targetDate});
+    orders.push({...c,time:t,date:dateKey()});
   });
   saveOrders();updateBadge();
   showToast(`✅ ${cart.length}件の注文を確定しました！`);
   cart=[];renderCart();
   clearSelectedName();
-  renderOrderStatusBanner();
 }
 
 // ===== ARCHIVE / RESET =====
-async function archiveTodayOrders(){
-  // アーカイブするキーを決定（ローカルに注文があればその日付、なければorderTargetKey）
-  const key=(orders.length?orders[0].date:null)||orderTargetKey();
-  // クラウドから当日の全注文を取得（他デバイスからの注文も含む）
-  let sourceOrders=await loadOrdersFromCloud(key);
-  if(!sourceOrders.length) sourceOrders=[...orders];
-  if(!sourceOrders.length) return;
+function archiveTodayOrders(){
+  if(!orders.length)return;
+  const key=orderTargetKey();
   const agg={};let total=0;
-  sourceOrders.forEach(o=>{
+  orders.forEach(o=>{
     const k=`${o.bentoId}-${o.oomori?1:0}`;
     if(!agg[k])agg[k]={bentoName:o.bentoName,emoji:o.emoji,oomori:o.oomori,price:o.price,count:0};
     agg[k].count++;total+=o.price;
   });
-  const entry={orders:[...sourceOrders],total,summary:Object.values(agg),count:sourceOrders.length};
+  const entry={orders:[...orders],total,summary:Object.values(agg),count:orders.length};
   dailyHistory[key]=entry;
   saveDailyHistory();
   // クラウドにも保存
-  await saveDailyHistoryToCloud(key, entry);
+  saveDailyHistoryToCloud(key, entry);
 }
-async function resetDailyOrders(){
+function resetDailyOrders(){
   if(!confirm('本日の注文をリセットしますか？\n（月次集計用に記録は自動保存されます）'))return;
-  await archiveTodayOrders();
+  archiveTodayOrders();
   orders=[];saveOrders();cart=[];renderCart();updateBadge();renderSummary();
-  orderLocked=false;localStorage.removeItem('order_locked_'+orderTargetKey());
+  orderLocked=false;localStorage.removeItem('order_locked_'+dateKey());
   showToast('✅ リセットしました（月次記録に保存済み）');
 }
 
@@ -1468,20 +1303,19 @@ async function renderSummary(){
       ${pRows}
     </div>`;
 }
-async function sendToLine(){
+function sendToLine(){
   if(!orders.length){showToast('注文がありません');return;}
   const msg=buildLineMsg();
   // Slackに同時送信（設定済みの場合）
+  // localStorageから再読み込みして確実に送信
   const savedSlack=localStorage.getItem('bento_slack_webhook')||'';
   if(savedSlack) slackWebhookUrl=savedSlack;
   sendToSlack(msg);
   // LINE URL方式で送信（メッセージが入力済み状態で開く）
   window.open('https://line.me/R/msg/text/?'+encodeURIComponent(msg),'_blank');
-  // 月次に保存（クラウドから全注文を取得してから保存）
-  await archiveTodayOrders();
-  // 送信後にロック（配達日のキーでロック）
+  // 送信後にロック
   orderLocked=true;
-  localStorage.setItem('order_locked_'+orderTargetKey(),'1');
+  localStorage.setItem('order_locked_'+dateKey(),'1');
   renderHistory();
 }
 
@@ -1576,53 +1410,14 @@ async function renderReceiptList(){
   }
   const keys=Object.keys(receipts).sort().reverse();
   if(!keys.length){list.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text-sub);font-size:0.84rem">保存された納品書はありません</div>`;return;}
-  // 月ごとにグループ化（今月のみ展開、過去月は折りたたみ）
-  const d=now();
-  const currentMonthKey=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
-  const monthMap={};
-  keys.forEach(key=>{
-    const mk=key.substring(0,7);
-    if(!monthMap[mk])monthMap[mk]=[];
-    monthMap[mk].push(key);
-  });
-  const months=Object.keys(monthMap).sort((a,b)=>b.localeCompare(a));
-  list.innerHTML=months.map(mk=>{
-    const[y,m]=mk.split('-').map(Number);
-    const isCurrentMonth=mk===currentMonthKey;
-    const isCollapsed=!isCurrentMonth;
-    const headerBg=isCurrentMonth?'#EEF4FF':'#f8f8f8';
-    const headerColor=isCurrentMonth?'var(--blue)':'var(--text-sub)';
-    const monthLabel=isCurrentMonth?`📅 ${y}年${m}月（今月）`:`📁 ${y}年${m}月`;
-    const itemsHtml=monthMap[mk].map(key=>{
-      const thumb=receipts[key].dataUrl
-        ?`<img class="receipt-thumb" src="${receipts[key].dataUrl}" alt="納品書" onclick="openModal('${key}')">`
-        :`<div class="receipt-thumb" style="display:flex;align-items:center;justify-content:center;background:#F5F0E8;font-size:1.4rem;" onclick="openModal('${key}')" title="タップで表示">🧾</div>`;
-      return`<div class="receipt-item" style="box-shadow:none;border:none;border-bottom:1px solid var(--border);border-radius:0;">
-      ${thumb}
-      <div class="receipt-info">
-        <div class="receipt-item-date">${fmtDate(key)}</div>
-        <div class="receipt-item-status">保存：${receipts[key].savedAt}</div>
-      </div>
-      <button class="receipt-delete-btn" onclick="deleteReceipt('${key}')">削除</button>
-    </div>`;}).join('');
-    return`<div style="margin-bottom:8px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:white;">
-      <button onclick="toggleReceiptMonth('${mk}')" style="width:100%;padding:11px 14px;background:${headerBg};border:none;font-family:'Noto Sans JP',sans-serif;cursor:pointer;display:flex;justify-content:space-between;align-items:center;min-height:44px;">
-        <span style="font-size:0.82rem;font-weight:700;color:${headerColor};">${monthLabel}</span>
-        <span style="font-size:0.74rem;color:var(--text-sub);">${monthMap[mk].length}枚 <span id="receipt-month-arrow-${mk}" style="font-size:0.7rem;">${isCollapsed?'▶':'▼'}</span></span>
-      </button>
-      <div id="receipt-month-content-${mk}" style="display:${isCollapsed?'none':'block'};padding:0 10px;">
-        ${itemsHtml}
-      </div>
-    </div>`;
-  }).join('');
-}
-function toggleReceiptMonth(mk){
-  const content=document.getElementById('receipt-month-content-'+mk);
-  const arrow=document.getElementById('receipt-month-arrow-'+mk);
-  if(!content||!arrow)return;
-  const hidden=content.style.display==='none';
-  content.style.display=hidden?'block':'none';
-  arrow.textContent=hidden?'▼':'▶';
+  list.innerHTML=keys.map(key=>`<div class="receipt-item">
+    <img class="receipt-thumb" src="${receipts[key].dataUrl}" alt="納品書" onclick="openModal('${key}')">
+    <div class="receipt-info">
+      <div class="receipt-item-date">${fmtDate(key)}</div>
+      <div class="receipt-item-status">保存：${receipts[key].savedAt}</div>
+    </div>
+    <button class="receipt-delete-btn" onclick="deleteReceipt('${key}')">削除</button>
+  </div>`).join('');
 }
 async function deleteReceipt(key){
   if(!confirm(`${fmtDate(key)}の納品書を削除しますか？`))return;
@@ -1630,15 +1425,8 @@ async function deleteReceipt(key){
   delete receipts[key];saveReceipts();renderReceiptList();
   showToast('🗑️ 削除しました');
 }
-async function openModal(key){
+function openModal(key){
   const r=receipts[key];if(!r)return;
-  if(!r.dataUrl){
-    showToast('⏳ 納品書を読み込み中...');
-    const img=await loadReceiptImageFromCloud(key);
-    if(!img){showToast('❌ 納品書の読み込みに失敗しました','error');return;}
-    r.dataUrl=img;
-    try{saveReceipts();}catch(e){}
-  }
   document.getElementById('modal-img').src=r.dataUrl;
   document.getElementById('modal-overlay').classList.remove('hidden');
 }
@@ -1756,11 +1544,8 @@ async function renderMonthly(){
       byBento[k].names.push(o.name);
     });
     const nameRows=Object.values(byBento).map(b=>`<div style="font-size:0.73rem;color:var(--text-sub);margin-top:3px;"><span style="font-weight:700;color:var(--text);">${b.label}</span>　${b.names.join('・')}</div>`).join('');
-    const receiptThumb=receipt&&receipt.dataUrl
-      ?`<img src="${receipt.dataUrl}" style="width:44px;height:44px;border-radius:6px;object-fit:cover;cursor:pointer;border:1px solid var(--border);" onclick="openModal('${key}')">`
-      :`<div style="width:44px;height:44px;border-radius:6px;border:1px solid var(--border);background:#F5F0E8;display:flex;align-items:center;justify-content:center;font-size:1.2rem;cursor:pointer;" onclick="openModal('${key}')" title="タップで表示">🧾</div>`;
     const receiptHtml=receipt
-      ?`<div style="margin-top:8px;display:flex;align-items:center;gap:8px;">${receiptThumb}<span style="font-size:0.7rem;color:var(--accent2);font-weight:700;">✅ 納品書あり（タップで表示）</span></div>`
+      ?`<div style="margin-top:8px;display:flex;align-items:center;gap:8px;"><img src="${receipt.dataUrl}" style="width:44px;height:44px;border-radius:6px;object-fit:cover;cursor:pointer;border:1px solid var(--border);" onclick="openModal('${key}')"><span style="font-size:0.7rem;color:var(--accent2);font-weight:700;">✅ 納品書あり</span></div>`
       :`<div style="margin-top:6px;font-size:0.7rem;color:#ccc;">📄 納品書未登録</div>`;
     return`<div style="border-bottom:2px solid var(--border);padding:10px 0 8px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
@@ -1842,20 +1627,7 @@ async function openVendorPage(){
   document.getElementById('vendor-view').style.display='block';
   document.body.style.overflow='hidden';
   document.getElementById('vendor-view').scrollTop=0;
-  vendorRefreshTimer=setInterval(async()=>{
-    // バックグラウンドのタブでは更新しない（通信量節約）
-    if(document.hidden)return;
-    // クラウドから最新の注文履歴のみ取得（納品書メタ情報は開いた時に取得済み）
-    try{
-      const[cloudHistory,cloudReceipts]=await Promise.all([
-        loadDailyHistoryFromCloud(currentVendorSel),
-        loadReceiptsFromCloud()
-      ]);
-      if(Object.keys(cloudHistory).length>0) Object.assign(dailyHistory,cloudHistory);
-      if(Object.keys(cloudReceipts).length>0) Object.assign(receipts,cloudReceipts);
-    }catch(e){console.error('自動更新エラー:',e);}
-    renderVendorView(currentVendorSel);
-  },30000);
+  vendorRefreshTimer=setInterval(()=>{loadState();renderVendorView(currentVendorSel);},30000);
 }
 function closeVendorView(){
   document.getElementById('vendor-view').style.display='none';
@@ -1896,51 +1668,13 @@ function onVendorMonthChange(){
   currentVendorSel=sel.value;
   renderVendorView(currentVendorSel);
 }
-async function changeVendorMonth(delta){
-  const[y,m]=currentVendorSel.split('-').map(Number);
-  const nd=new Date(y,m-1+delta,1);
-  const newSel=`${nd.getFullYear()}-${pad(nd.getMonth()+1)}`;
-  // 未来月には進めない
-  const d=now();
-  const thisMonthKey=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
-  if(newSel>thisMonthKey)return;
-  currentVendorSel=newSel;
-  // クラウドから対象月のデータを取得
-  try{
-    const[cloudHistory,cloudReceipts]=await Promise.all([
-      loadDailyHistoryFromCloud(newSel),
-      loadReceiptsFromCloud()
-    ]);
-    if(Object.keys(cloudHistory).length>0)Object.assign(dailyHistory,cloudHistory);
-    if(Object.keys(cloudReceipts).length>0)Object.assign(receipts,cloudReceipts);
-  }catch(e){console.error('月変更エラー:',e);}
-  renderVendorView(currentVendorSel);
-}
-async function vendorOpenImg(key){
-  const r=receipts[key];if(!r)return;
-  if(!r.dataUrl){
-    showToast('⏳ 納品書を読み込み中...');
-    const img=await loadReceiptImageFromCloud(key);
-    if(!img){showToast('❌ 納品書の読み込みに失敗しました','error');return;}
-    r.dataUrl=img;
-    try{saveReceipts();}catch(e){}
-  }
-  document.getElementById('modal-img').src=r.dataUrl;
-  document.getElementById('modal-overlay').classList.remove('hidden');
-}
+function vendorOpenImg(key){const r=receipts[key];if(!r)return;document.getElementById('modal-img').src=r.dataUrl;document.getElementById('modal-overlay').classList.remove('hidden');}
 
 function renderVendorView(sel){
   const[y,m]=sel.split('-').map(Number);
   const{keys:allKeys,hasCurrentOrders,todayKey}=getMonthKeys(sel);
   const todayStr=now().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'});
   document.getElementById('vendor-header-sub').textContent=`${y}年${m}月分　／　${todayStr}現在`;
-  // 月ナビゲーション：ラベルと翌月ボタンの状態を更新
-  const lbl=document.getElementById('vendor-month-label');
-  if(lbl)lbl.textContent=`${y}年${m}月`;
-  const d=now();
-  const thisMonthKey=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
-  const nextBtn=document.getElementById('vendor-month-next-btn');
-  if(nextBtn){nextBtn.style.opacity=sel>=thisMonthKey?'0.3':'1';nextBtn.style.pointerEvents=sel>=thisMonthKey?'none':'auto';}
   const updEl=document.getElementById('vendor-last-updated');
   if(updEl)updEl.textContent=`最終更新：${now().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
   if(!allKeys.length){document.getElementById('vendor-content').innerHTML=`<div style="text-align:center;padding:40px;color:#7A6A5A;">この月のデータがありません</div>`;return;}
@@ -1955,9 +1689,7 @@ function renderVendorView(sel){
         :`<span style="display:inline-block;background:#FFF0E8;border-radius:6px;padding:2px 8px;font-size:0.75rem;margin:2px 2px 0 0;color:#C8401A;font-weight:700;">${s.emoji}${s.bentoName}×${s.count}</span>`
     ).join('');
     const receiptSection=receipt
-      ?(receipt.dataUrl
-        ?`<div style="margin-top:10px;"><div style="font-size:0.7rem;font-weight:700;color:#2D6A4F;margin-bottom:5px;">📄 納品書</div><img src="${receipt.dataUrl}" style="width:100%;max-height:220px;object-fit:contain;border-radius:10px;border:1px solid #EDE0D0;cursor:pointer;" onclick="vendorOpenImg('${key}')" alt="納品書"></div>`
-        :`<div style="margin-top:10px;"><button onclick="vendorOpenImg('${key}')" style="width:100%;padding:10px;background:#F0FFF5;border:2px solid #2D6A4F;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.8rem;font-weight:700;color:#2D6A4F;cursor:pointer;min-height:44px;">📄 納品書を表示する</button></div>`)
+      ?`<div style="margin-top:10px;"><div style="font-size:0.7rem;font-weight:700;color:#2D6A4F;margin-bottom:5px;">📄 納品書</div><img src="${receipt.dataUrl}" style="width:100%;max-height:220px;object-fit:contain;border-radius:10px;border:1px solid #EDE0D0;cursor:pointer;" onclick="vendorOpenImg('${key}')" alt="納品書"></div>`
       :`<div style="margin-top:8px;font-size:0.7rem;color:#ccc;">📄 納品書未登録</div>`;
     return`<div style="background:white;border-radius:14px;padding:14px 15px;margin-bottom:10px;box-shadow:0 2px 10px rgba(0,0,0,0.07);">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
@@ -1984,18 +1716,17 @@ function renderHistory(){
     return;
   }
   const targetDateStr=orderTargetDate().toLocaleDateString('ja-JP',{month:'long',day:'numeric',weekday:'short'});
-  const locked=isHistoryLocked();
-  const lockNotice=locked
-    ?`<div style="background:#FFF0EE;border:2px solid var(--primary);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:0.82rem;color:var(--primary);font-weight:700;display:flex;align-items:center;gap:8px;"><span>🔒</span>${orderLocked?'LINEで送信済みのため':'8:35を過ぎたため'}、編集・取消はできません</div>`
+  const lockNotice=orderLocked
+    ?`<div style="background:#FFF0EE;border:2px solid var(--primary);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:0.82rem;color:var(--primary);font-weight:700;display:flex;align-items:center;gap:8px;"><span>🔒</span>LINEで送信済みのため、編集・取消はできません</div>`
     :`<div style="background:#F0FFF5;border:2px solid var(--green);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:0.82rem;color:var(--accent2);font-weight:700;display:flex;align-items:center;gap:8px;"><span>✏️</span>LINEで送信する前は編集・取消が可能です</div>`;
   const rows=orders.map((o,i)=>{
-    const btnArea=locked
-      ?`<div style="background:#eee;border-radius:8px;padding:6px 10px;font-size:0.7rem;color:#aaa;flex-shrink:0;">🔒 ロック中</div>`
+    const btnArea=orderLocked
+      ?`<div style="background:#eee;border-radius:8px;padding:6px 10px;font-size:0.7rem;color:#aaa;flex-shrink:0;">🔒 送信済み</div>`
       :`<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
           <button onclick="editOrder(${i})" style="padding:5px 12px;background:var(--blue);color:white;border:none;border-radius:8px;font-size:0.73rem;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;min-height:32px;">✏️ 編集</button>
-          <button onclick="confirmCancel(${i})" style="padding:5px 12px;background:white;color:var(--primary);border:2px solid var(--primary);border-radius:8px;font-size:0.73rem;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;min-height:32px;">🗑️ 取消</button>
+          <button onclick="cancelOrder(${i})" style="padding:5px 12px;background:white;color:var(--primary);border:2px solid var(--primary);border-radius:8px;font-size:0.73rem;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;min-height:32px;">🗑️ 取消</button>
         </div>`;
-    return `<div id="history-row-${i}" style="background:#FAFAFA;border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;${locked?'opacity:0.65;':''}">
+    return `<div id="history-row-${i}" style="background:#FAFAFA;border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;${orderLocked?'opacity:0.65;':''}">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
         <div style="flex:1;">
           <div style="font-weight:700;font-size:0.9rem;">${o.name}</div>
@@ -2129,62 +1860,6 @@ function updateAppUrlStatus(){
   }
 }
 
-function renderAiKeyArea(){
-  const area=document.getElementById('ai-key-area');
-  if(!area)return;
-  if(groqApiKey){
-    area.innerHTML=`<div style="font-size:0.74rem;color:#2E7D32;background:#E8F5E9;border-radius:8px;padding:7px 10px;">
-      <span>✅ APIキー設定済み</span>
-    </div>`;
-  }else{
-    area.innerHTML=`<div style="background:#FFF3E0;border:2px solid #FF9800;border-radius:10px;padding:10px 12px;">
-      <div style="font-size:0.78rem;font-weight:700;color:#E65100;margin-bottom:6px;">⚠️ APIキーが未設定です</div>
-      <div style="font-size:0.7rem;color:#BF360C;margin-bottom:8px;">console.groq.com で無料取得した「gsk_...」のキーを入力してください</div>
-      <input id="ai-key-inline-input" type="password" placeholder="gsk_..." style="width:100%;padding:9px 12px;border:2px solid #FF9800;border-radius:8px;font-size:15px;font-family:'Noto Sans JP',sans-serif;outline:none;-webkit-appearance:none;box-sizing:border-box;margin-bottom:8px;">
-      <button onclick="saveAiKeyInline()" style="width:100%;padding:10px;background:#FF9800;color:white;border:none;border-radius:8px;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">💾 APIキーを保存して使う</button>
-    </div>`;
-  }
-}
-function saveAiKeyInline(){
-  const val=(document.getElementById('ai-key-inline-input')||{}).value||'';
-  if(!val.trim()){showToast('⚠️ APIキーを入力してください');return;}
-  groqApiKey=val.trim();
-  saveGroqApiKey();
-  renderAiKeyArea();
-  initGeminiApiKeyInput();
-  showToast('✅ APIキーを保存しました');
-}
-function clearAiKeyInline(){
-  groqApiKey='';
-  saveGroqApiKey();
-  renderAiKeyArea();
-  initGeminiApiKeyInput();
-  showToast('🗑️ APIキーをクリアしました');
-}
-function initGeminiApiKeyInput(){
-  const input=document.getElementById('gemini-api-key-input');
-  if(input) input.value=groqApiKey;
-  const status=document.getElementById('gemini-key-status');
-  if(status) status.textContent=groqApiKey?'✅ APIキーが設定されています':'';
-  renderAiKeyArea();
-}
-function saveGeminiApiKeySetting(){
-  const val=document.getElementById('gemini-api-key-input').value.trim();
-  groqApiKey=val;
-  saveGroqApiKey();
-  const status=document.getElementById('gemini-key-status');
-  if(status) status.textContent=val?'✅ APIキーを保存しました':'クリアしました';
-  showToast(val?'✅ Groq APIキーを保存しました':'クリアしました');
-}
-function clearGeminiApiKey(){
-  groqApiKey='';
-  document.getElementById('gemini-api-key-input').value='';
-  saveGroqApiKey();
-  const status=document.getElementById('gemini-key-status');
-  if(status) status.textContent='';
-  showToast('🗑️ Groq APIキーをクリアしました');
-}
-
 function initSlackWebhookInput(){
   const input=document.getElementById('slack-webhook-input');
   if(input) input.value=slackWebhookUrl;
@@ -2275,24 +1950,6 @@ function updateLineGroupStatus(){
 let aiCalendarImageBase64='';
 let aiParsedMenuData={};
 
-// 画像をリサイズ・圧縮してAPIサイズ制限内に収める
-async function compressImageForApi(base64DataUrl,maxWidth=1200,quality=0.7){
-  return new Promise(resolve=>{
-    const img=new Image();
-    img.onload=()=>{
-      let{width,height}=img;
-      if(width>maxWidth){height=Math.round(height*maxWidth/width);width=maxWidth;}
-      const canvas=document.createElement('canvas');
-      canvas.width=width;canvas.height=height;
-      const ctx=canvas.getContext('2d');
-      ctx.drawImage(img,0,0,width,height);
-      resolve(canvas.toDataURL('image/jpeg',quality));
-    };
-    img.onerror=()=>resolve(base64DataUrl); // 失敗時は元のまま
-    img.src=base64DataUrl;
-  });
-}
-
 // ファイル選択ハンドラ（adminUnlock後に登録）
 function initAiCalendarInput(){
   // inputは常にDOMに存在するので確実に登録
@@ -2306,29 +1963,23 @@ function initAiCalendarInput(){
 function onAiFileSelected(e){
   const file=e.target.files[0];
   if(!file)return;
-  // PDFは非対応
-  if(file.type==='application/pdf'){
-    showToast('⚠️ PDFは非対応です。スクリーンショット（写真）で撮影してください');
-    e.target.value='';
-    return;
-  }
-  const status=document.getElementById('ai-status');
-  status.style.display='block';
-  status.textContent='📷 画像を読み込んでいます...';
   const reader=new FileReader();
   reader.onload=async ev=>{
     const base64=ev.target.result;
-    // iPhoneの大きな写真はAPI制限に引っかかるため圧縮
-    const compressed=await compressImageForApi(base64);
-    aiCalendarImageBase64=compressed;
-    document.getElementById('ai-preview-img').src=compressed;
-    document.getElementById('ai-preview-area').style.display='block';
+    aiCalendarImageBase64=base64;
+    // プレビュー表示
+    if(file.type.startsWith('image/')){
+      document.getElementById('ai-preview-img').src=base64;
+      document.getElementById('ai-preview-area').style.display='block';
+    } else {
+      document.getElementById('ai-preview-area').style.display='none';
+    }
     // 年月セレクト表示
     initAiYearMonthSelect();
     document.getElementById('ai-year-month-select').style.display='block';
     document.getElementById('ai-read-btn').style.display='block';
     document.getElementById('ai-result-area').style.display='none';
-    status.style.display='none';
+    document.getElementById('ai-status').style.display='none';
     document.getElementById('ai-upload-area').style.borderColor='var(--blue)';
   };
   reader.readAsDataURL(file);
@@ -2372,75 +2023,71 @@ async function aiReadCalendar(){
   const mediaType=mediaTypeMatch?mediaTypeMatch[1]:'image/jpeg';
   const base64Data=aiCalendarImageBase64.split(',')[1];
 
-  const daysInMonth=new Date(year,month,0).getDate();
-
-  const prompt=`これは${year}年${month}月のお弁当カレンダーです。
-
-カレンダーの各マスに書かれている【数字（日付）】と【メニュー内容】だけを読み取ってください。
-曜日の判定は不要です。メニューが書かれているマスの数字とメニューをそのまま読んでください。
+  const prompt=`これは${year}年${month}月の平良商店のお弁当カレンダーです。
+カレンダーから各日の情報を読み取り、以下のJSON形式のみで返してください。
+説明文、前置き、後置き、マークダウン記法は一切不要です。JSONデータのみ返してください。
+平日（月〜金）のみ抽出し、土日・祝日はholidayフィールドに祝日名を入れてください。
 
 必ず以下のJSON形式のみで返し、説明文は一切不要です：
 {
   "days": [
-    {"day": 7, "main": "料理名", "sides": ["副菜1", "副菜2"]},
-    {"day": 8, "main": "料理名", "sides": ["副菜1"]},
+    {"day": 1, "main": "料理名", "sides": ["副菜1", "副菜2", "副菜3"], "holiday": null},
+    {"day": 2, "main": null, "sides": [], "holiday": "祝日名"},
     ...
   ]
 }
 
 注意：
-- dayはカレンダーのマスに書かれている数字をそのまま使用（1〜${daysInMonth}の整数）
-- メニューが書かれているマスのみを出力（空白マスは出力不要）
-- mainはメインの料理名のみ
-- sidesは副菜のリスト（空の場合は[]）
-- 曜日・祝日の判定は不要（holidayフィールド不要）
-- 日付のずれが起きないよう、各マスの数字を慎重に読んでください`;
+- mainは日替わり弁当のメインの料理名のみ
+- sidesは副菜のリスト（最大3つ）
+- 土日はmain:null, sides:[], holidayはnull
+- 祝日はmain:null, holiday:"祝日名"
+- ${year}年${month}月の全日を含めてください`;
 
-  if(!groqApiKey){
-    status.textContent='❌ Groq APIキーが設定されていません。管理画面で設定してください。';
-    btn.disabled=false;
-    btn.textContent='🤖 AIでメニューを読み取る';
-    return;
-  }
   try{
-    const response=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    // Supabase Edge Function経由でAIを呼び出す（CORS回避）
+    const response=await fetch(`${SUPABASE_URL}/functions/v1/calendar-reader`,{
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqApiKey},
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+SUPABASE_KEY,
+        'apikey':SUPABASE_KEY
+      },
       body:JSON.stringify({
-        model:'qwen/qwen3.6-27b',
-        max_tokens:3000,
-        reasoning_effort:'none',
-        messages:[{
-          role:'user',
-          content:[
-            {type:'image_url',image_url:{url:'data:'+mediaType+';base64,'+base64Data}},
-            {type:'text',text:prompt}
-          ]
-        }]
+        image_data:base64Data,
+        media_type:mediaType,
+        prompt:prompt
       })
     });
     const data=await response.json();
-    // APIエラーはそのまま表示（モデル廃止・キー無効などの原因特定のため）
-    if(data.error)throw new Error('Groq APIエラー: '+(data.error.message||JSON.stringify(data.error)));
-    let text=data.choices?.[0]?.message?.content||'';
-    // 思考タグが含まれていた場合は除去（reasoning_formatが効かない場合の保険）
-    text=text.replace(/<think>[\s\S]*?<\/think>/g,'');
-    // JSONを抽出
-    const jsonMatch=text.match(/\{[\s\S]*\}/);
-    if(!jsonMatch)throw new Error('JSONが見つかりません');
-    const parsed=JSON.parse(jsonMatch[0]);
+    if(data.error)throw new Error(data.error);
+    const text=data.text||'';
+    // JSONを抽出（複数パターンに対応）
+    let parsed=null;
+    // パターン1: ```json ... ``` 形式
+    const codeBlockMatch=text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if(codeBlockMatch){
+      try{parsed=JSON.parse(codeBlockMatch[1].trim());}catch(e){}
+    }
+    // パターン2: { ... } 形式
+    if(!parsed){
+      const jsonMatch=text.match(/\{[\s\S]*\}/);
+      if(jsonMatch){
+        try{parsed=JSON.parse(jsonMatch[0]);}catch(e){}
+      }
+    }
+    // パターン3: テキスト全体をパース
+    if(!parsed){
+      try{parsed=JSON.parse(text.trim());}catch(e){}
+    }
+    if(!parsed||!parsed.days)throw new Error('AIの応答からメニューデータを取得できませんでした。もう一度お試しください。');
     aiParsedMenuData={year,month,days:parsed.days};
     renderAiResult(year,month,parsed.days);
     status.textContent=`✅ ${parsed.days.length}日分のメニューを読み取りました`;
     document.getElementById('ai-result-area').style.display='block';
   }catch(err){
-    console.error('AI読取エラー:',err);
-    let errMsg='❌ 読み取りに失敗しました。';
-    if(err&&err.message&&err.message.startsWith('Groq APIエラー'))errMsg+=err.message;
-    else if(err&&err.message&&err.message.includes('JSON'))errMsg+='AIの応答が不正でした。もう一度お試しください。';
-    else if(err&&err.message&&(err.message.includes('network')||err.message.includes('fetch')))errMsg+='通信エラーです。ネットワークを確認してください。';
-    else errMsg+='もう一度お試しいただくか、画像を撮り直してください。';
-    status.textContent=errMsg;
+    console.error('AI読み取りエラー:', err);
+    status.textContent='❌ エラー：'+err.message+' / Edge Function未設定の可能性があります';
   }
   btn.disabled=false;
   btn.textContent='🤖 AIでメニューを読み取る';
@@ -2449,14 +2096,17 @@ async function aiReadCalendar(){
 function renderAiResult(year,month,days){
   const list=document.getElementById('ai-result-list');
   const daysInMonth=new Date(year,month,0).getDate();
-  list.innerHTML=days.filter(d=>d.day>=1&&d.day<=daysInMonth&&d.main).map(d=>{
+  list.innerHTML=days.filter(d=>d.day>=1&&d.day<=daysInMonth).map(d=>{
     const dt=new Date(year,month-1,d.day);
-    const dow=dt.getDay();
-    const dowLabel=DOW[dow];
-    const isWeekend=(dow===0||dow===6);
-    if(isWeekend){
+    const dowLabel=DOW[dt.getDay()];
+    if(d.holiday&&!d.main){
+      return`<div style="padding:5px 0;border-bottom:1px solid #f0f0f0;color:#C8401A;">
+        🎌 ${month}/${d.day}（${dowLabel}）${d.holiday}
+      </div>`;
+    }
+    if(!d.main){
       return`<div style="padding:5px 0;border-bottom:1px solid #f0f0f0;color:#ccc;">
-        ⚠️ ${month}/${d.day}（${dowLabel}）※土日のため登録スキップ
+        ${month}/${d.day}（${dowLabel}）休み
       </div>`;
     }
     return`<div style="padding:5px 0;border-bottom:1px solid #f0f0f0;">
@@ -2473,13 +2123,11 @@ function aiRegisterAll(){
   const monthKey=`${year}-${pad(month)}`;
   if(!menuData[monthKey])menuData[monthKey]={};
   days.forEach(d=>{
-    if(d.day<1||!d.main)return;
-    const dow=new Date(year,month-1,d.day).getDay();
-    if(dow===0||dow===6)return; // 土日はスキップ
+    if(d.day<1)return;
     menuData[monthKey][d.day]={
       main:d.main||null,
       sides:d.sides||[],
-      holiday:null
+      holiday:d.holiday||null
     };
   });
   saveMenuData();
@@ -2611,313 +2259,60 @@ function deleteMenuEntry(y,m,d){
   renderTodayMenu();
 }
 
-function toggleAdvancedSettings(){
-  const area=document.getElementById('advanced-settings-area');
-  const arrow=document.getElementById('advanced-settings-arrow');
-  if(!area||!arrow)return;
-  const hidden=area.style.display==='none';
-  area.style.display=hidden?'block':'none';
-  arrow.textContent=hidden?'▼':'▶';
-}
-
-function toggleMenuMonth(monthKey){
-  const content=document.getElementById('menu-month-content-'+monthKey);
-  const arrow=document.getElementById('menu-month-arrow-'+monthKey);
-  if(!content||!arrow)return;
-  const hidden=content.style.display==='none';
-  content.style.display=hidden?'block':'none';
-  arrow.textContent=hidden?'▼':'▶';
-}
-
 function renderMenuList(){
   const list=document.getElementById('menu-reg-list');
   if(!list)return;
-  const d=now();
-  const currentMonthKey=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
-  // 月別にグループ化
-  const monthMap={};
+  const allEntries=[];
   Object.entries(menuData).forEach(([monthKey,days])=>{
     Object.entries(days).forEach(([day,menu])=>{
-      if(!monthMap[monthKey])monthMap[monthKey]=[];
-      monthMap[monthKey].push({day:+day,menu});
+      allEntries.push({monthKey,day:+day,menu});
     });
   });
-  const months=Object.keys(monthMap).sort((a,b)=>b.localeCompare(a)); // 新しい月順
-  if(!months.length){
+  allEntries.sort((a,b)=>a.monthKey.localeCompare(b.monthKey)||a.day-b.day);
+  if(!allEntries.length){
     list.innerHTML=`<div style="text-align:center;padding:16px;color:var(--text-sub);font-size:0.82rem;">登録済みメニューはありません</div>`;
     return;
   }
-  list.innerHTML=months.map(monthKey=>{
+  list.innerHTML=allEntries.map(({monthKey,day,menu})=>{
     const[y,m]=monthKey.split('-').map(Number);
-    const isCurrentMonth=monthKey===currentMonthKey;
-    const isPast=monthKey<currentMonthKey;
-    const entries=monthMap[monthKey].sort((a,b)=>a.day-b.day);
-    const isCollapsed=!isCurrentMonth; // 今月以外は折りたたみ
-    const headerBg=isCurrentMonth?'#EEF4FF':isPast?'#f8f8f8':'#F0FFF5';
-    const headerColor=isCurrentMonth?'var(--blue)':isPast?'var(--text-sub)':'var(--accent2)';
-    const monthLabel=isCurrentMonth?`📅 ${y}年${m}月（今月）`:isPast?`📁 ${y}年${m}月`:`📅 ${y}年${m}月（来月以降）`;
-    const entriesHtml=entries.map(({day,menu})=>{
-      const dt=new Date(y,m-1,day);
-      const sidesStr=(menu.sides||[]).join('・');
-      return`<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--border);gap:8px;">
-        <div style="flex:1;">
-          <div style="font-size:0.82rem;font-weight:700;">${m}月${day}日（${DOW[dt.getDay()]}）</div>
-          <div style="font-size:0.76rem;color:var(--primary);">${menu.main||''}${menu.holiday?'🎌 '+menu.holiday:''}</div>
-          ${sidesStr?`<div style="font-size:0.7rem;color:var(--text-sub);">${sidesStr}</div>`:''}
-        </div>
-        <button onclick="deleteMenuEntry(${y},${m},${day})" style="padding:4px 8px;background:none;border:1px solid #ddd;border-radius:6px;font-size:0.68rem;color:var(--text-sub);cursor:pointer;flex-shrink:0;">削除</button>
-      </div>`;
-    }).join('');
-    return`<div style="margin-bottom:8px;border:1px solid var(--border);border-radius:10px;overflow:hidden;">
-      <button onclick="toggleMenuMonth('${monthKey}')" style="width:100%;display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:${headerBg};border:none;cursor:pointer;font-family:'Noto Sans JP',sans-serif;min-height:44px;">
-        <span style="font-size:0.82rem;font-weight:700;color:${headerColor};">${monthLabel}</span>
-        <span style="display:flex;align-items:center;gap:6px;">
-          <span style="font-size:0.72rem;color:var(--text-sub);">${entries.length}日分</span>
-          <span id="menu-month-arrow-${monthKey}" style="font-size:0.75rem;color:var(--text-sub);">${isCollapsed?'▶':'▼'}</span>
-        </span>
-      </button>
-      <div id="menu-month-content-${monthKey}" style="display:${isCollapsed?'none':'block'};padding:0 12px;">
-        ${entriesHtml}
+    const dt=new Date(y,m-1,day);
+    const sidesStr=(menu.sides||[]).join('・');
+    return`<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--border);gap:8px;">
+      <div style="flex:1;">
+        <div style="font-size:0.82rem;font-weight:700;">${m}月${day}日（${DOW[dt.getDay()]}）</div>
+        <div style="font-size:0.76rem;color:var(--primary);">${menu.main||''}${menu.holiday?'🎌 '+menu.holiday:''}</div>
+        ${sidesStr?`<div style="font-size:0.7rem;color:var(--text-sub);">${sidesStr}</div>`:''}
       </div>
+      <button onclick="deleteMenuEntry(${y},${m},${day})" style="padding:4px 8px;background:none;border:1px solid #ddd;border-radius:6px;font-size:0.68rem;color:var(--text-sub);cursor:pointer;flex-shrink:0;">削除</button>
     </div>`;
   }).join('');
 }
 
-// ===== 管理者 当日注文管理 =====
-let adminOomori=false;
-
-function adminSetOomori(val){
-  adminOomori=val;
-  const no=document.getElementById('admin-oomori-no');
-  const yes=document.getElementById('admin-oomori-yes');
-  if(!no||!yes)return;
-  no.style.background=val?'white':'var(--primary)';
-  no.style.color=val?'var(--text-sub)':'white';
-  no.style.border=val?'2px solid var(--border)':'2px solid var(--primary)';
-  yes.style.background=val?'var(--primary)':'white';
-  yes.style.color=val?'white':'var(--text-sub)';
-  yes.style.border=val?'2px solid var(--primary)':'2px solid var(--border)';
-}
-
-async function renderAdminOrders(){
-  const container=document.getElementById('admin-today-orders');
-  if(!container)return;
-  const targetKey=orderTargetKey();
-  container.innerHTML='<div style="font-size:0.78rem;color:var(--text-sub);text-align:center;padding:8px;">読み込み中...</div>';
-  const cloudOrders=await loadOrdersFromCloud(targetKey);
-  if(!cloudOrders.length){
-    container.innerHTML='<div style="font-size:0.8rem;color:var(--text-sub);text-align:center;padding:12px;">現在の注文はありません</div>';
-    return;
-  }
-  container.innerHTML=cloudOrders.map(o=>`
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:0.8rem;background:white;">
-      <div style="flex:1;">
-        <span style="font-weight:700;">${escapeHtml(o.name)}</span>
-        <span style="color:var(--text-sub);margin-left:6px;">${o.emoji}${o.bentoName}（${o.oomori?'大盛り':'普通盛り'}）¥${o.price}</span>
-      </div>
-      <div style="display:flex;gap:4px;">
-        <button onclick="adminStartEditOrder('${o.cloud_id}', '${escapeHtml(o.name).replace(/'/g, "\\'")}', ${o.bentoId}, ${o.oomori})" style="padding:4px 8px;background:white;color:#2D6A4F;border:1.5px solid #2D6A4F;border-radius:6px;font-size:0.72rem;cursor:pointer;font-family:'Noto Sans JP',sans-serif;">✏️ 編集</button>
-        <button onclick="adminDeleteOrder('${o.cloud_id}')" style="padding:4px 8px;background:white;color:var(--primary);border:1.5px solid var(--primary);border-radius:6px;font-size:0.72rem;cursor:pointer;font-family:'Noto Sans JP',sans-serif;">🗑️ 削除</button>
-      </div>
-    </div>
-  `).join('')+`<div style="font-size:0.78rem;color:var(--text-sub);text-align:right;margin-top:4px;">計 ${cloudOrders.length}件</div>`;
-  // Populate bento select
-  const sel=document.getElementById('admin-add-bento');
-  if(sel&&!sel.options.length){
-    BENTOS.forEach(b=>{const opt=document.createElement('option');opt.value=b.id;opt.textContent=b.emoji+' '+b.name+' ¥'+(b.price);sel.appendChild(opt);});
-  }
-}
-
-let adminEditingCloudId = null;
-
-function adminStartEditOrder(cloudId, name, bentoId, oomori) {
-  adminEditingCloudId = cloudId;
-  const nameEl = document.getElementById('admin-add-name');
-  if(nameEl) nameEl.value = name;
-  const bentoEl = document.getElementById('admin-add-bento');
-  if(bentoEl) bentoEl.value = bentoId;
-  adminSetOomori(oomori);
-  
-  const btn = document.getElementById('admin-add-btn');
-  if(btn) {
-    btn.innerHTML = '✏️ 更新する';
-    btn.style.background = 'linear-gradient(135deg,#2D6A4F,#3D8A6F)';
-  }
-}
-
-async function adminAddOrder(){
-  const nameEl=document.getElementById('admin-add-name');
-  const bentoEl=document.getElementById('admin-add-bento');
-  const name=(nameEl?.value||'').trim();
-  const bentoId=parseInt(bentoEl?.value||'1');
-  const bento=BENTOS.find(b=>b.id===bentoId);
-  if(!name){showToast('⚠️ お名前を入力してください');return;}
-  if(!bento){showToast('⚠️ 弁当を選択してください');return;}
-  const t=now().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
-  const order={name,bentoId:bento.id,bentoName:bento.name,emoji:bento.emoji,oomori:adminOomori,price:bento.price+(adminOomori?OOMORI:0),time:t,date:orderTargetKey()};
-  
-  if (adminEditingCloudId) {
-    try {
-      await sbFetch(`orders?id=eq.${adminEditingCloudId}`, 'PATCH', {
-        name: order.name,
-        bento_id: order.bentoId,
-        bento_name: order.bentoName,
-        emoji: order.emoji,
-        oomori: order.oomori,
-        price: order.price,
-        time: order.time
-      });
-      const idx = orders.findIndex(o => o.cloud_id === adminEditingCloudId);
-      if (idx >= 0) {
-        orders[idx] = { ...orders[idx], ...order };
-      }
-      showToast(`✅ ${name}さんの注文を更新しました`);
-    } catch(e) {
-      console.error('更新エラー:', e);
-      showToast('⚠️ 更新に失敗しました');
-    }
-  } else {
-    try{
-      await saveOrderToCloud(order);
-      orders.push(order);
-      showToast(`✅ ${name}さんの注文を追加しました`);
-    }catch(e){
-      console.error('管理追加エラー:',e);
-      showToast('⚠️ 追加に失敗しました。ネットワークを確認してください','error',4000);
-      return;
-    }
-  }
-  
-  adminEditingCloudId = null;
-  saveOrders();
-  updateBadge();
-  if(nameEl)nameEl.value='';
-  adminSetOomori(false);
-  
-  const btn = document.getElementById('admin-add-btn');
-  if(btn) {
-    btn.innerHTML = '＋ 追加する';
-    btn.style.background = 'linear-gradient(135deg,#E8A000,#C87800)';
-  }
-  
-  await refreshAdminState();
-}
-
-async function adminDeleteOrder(orderId){
-  if(!confirm('この注文を削除しますか？'))return;
-  await deleteOrderFromCloud(orderId);
-  orders=orders.filter(o=>o.id!==orderId&&o.cloud_id!==orderId);
-  saveOrders();updateBadge();
-  await refreshAdminState();
-  showToast('🗑️ 注文を削除しました');
-}
-
-async function refreshAdminState() {
-  const targetKey = orderTargetKey();
-  if (dailyHistory[targetKey]) {
-    if (orders.length > 0) {
-      await archiveTodayOrders();
-    } else {
-      delete dailyHistory[targetKey];
-      saveDailyHistory();
-      saveDailyHistoryToCloud(targetKey, {orders:[], total:0, summary:[], count:0});
-    }
-  }
-  await renderAdminOrders();
-  renderAdminSummary();
-  if(typeof renderSummary === 'function') renderSummary();
-  if(typeof renderMonthly === 'function') renderMonthly();
-  if(typeof renderHistory === 'function') renderHistory();
-}
-
-// ===== ADMIN NAME SEARCH =====
-function onAdminNameInput(){
-  const q=document.getElementById('admin-add-name').value.trim();
-  showAdminNameDropdown(q);
-}
-function onAdminNameFocus(){
-  const q=document.getElementById('admin-add-name').value.trim();
-  showAdminNameDropdown(q);
-}
-function onAdminNameBlur(){
-  setTimeout(()=>{
-    const dd=document.getElementById('admin-name-dropdown');
-    if(dd) dd.classList.remove('open');
-  },200);
-}
-function showAdminNameDropdown(q){
-  const dd=document.getElementById('admin-name-dropdown');
-  if(!dd)return;
-  let filtered;
-  if(!q){
-    filtered=EMPLOYEES;
-  }else{
-    const lq=q.toLowerCase().replace(/\s/g,'');
-    filtered=EMPLOYEES.filter(e=>{
-      const nameClean=e.name.replace(/\s/g,'').toLowerCase();
-      const kanaClean=e.kana.replace(/\s/g,'').toLowerCase();
-      const kanaHira=e.kana.replace(/[\u30A1-\u30F6]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60)).replace(/\s/g,'').toLowerCase();
-      return nameClean.includes(lq)||kanaClean.includes(lq)||kanaHira.includes(lq);
-    });
-  }
-  if(!filtered.length&&q){
-    dd.innerHTML=`<div class="name-option" onmousedown="selectAdminName('${q.replace(/'/g,"\\'")}')"><span>「${escapeHtml(q)}」を直接入力</span></div>`;
-  }else{
-    dd.innerHTML=filtered.map(e=>`
-      <div class="name-option" onmousedown="selectAdminName('${e.name.replace(/'/g,"\\'")}')">
-        <span>${e.name}</span><span class="furigana">${e.kana}</span>
-      </div>`).join('');
-  }
-  dd.classList.add('open');
-}
-function selectAdminName(name){
-  document.getElementById('admin-add-name').value=name;
-  document.getElementById('admin-name-dropdown').classList.remove('open');
-}
-function clearAdminNameInput(){
-  document.getElementById('admin-add-name').value='';
-  onAdminNameInput();
-  document.getElementById('admin-add-name').focus();
-}
-
 // ===== ADMIN =====
-async function adminUnlock(){
+function adminUnlock(){
   const pw=document.getElementById('admin-pw-input').value;
-  // SHA-256ハッシュで比較（平文パスワードをソースに残さない）
-  const hashBuf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pw));
-  const hashHex=Array.from(new Uint8Array(hashBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-  if(hashHex===ADMIN_PASSWORD_HASH){
+  if(pw===ADMIN_PASSWORD){
     adminUnlocked=true;
     document.getElementById('admin-locked-view').style.display='none';
     document.getElementById('admin-unlocked-view').style.display='block';
     initMonthlySelect();
     renderAdminSummary();
     initAppPublicUrlInput();
-    initGeminiApiKeyInput();
     initSlackWebhookInput();
     initLineGroupUrlInput();
     initMenuRegSelects();
     initAiCalendarInput();
-    renderAdminOrders();
   }else{
     showToast('⚠️ パスワードが違います');
     document.getElementById('admin-pw-input').value='';
   }
 }
 
-async function renderAdminSummary(){
+function renderAdminSummary(){
   const sel=document.getElementById('admin-month-select').value;
   const[y,m]=sel.split('-').map(Number);
-  const container=document.getElementById('admin-name-summary');
-  // クラウドから最新の月次データを取得
-  try{
-    const cloudHistory=await loadDailyHistoryFromCloud(sel);
-    if(Object.keys(cloudHistory).length>0){
-      Object.assign(dailyHistory,cloudHistory);
-      saveDailyHistory();
-    }
-  }catch(e){console.error('管理集計クラウド読み込みエラー:',e);}
   const{keys:allKeys,hasCurrentOrders,todayKey}=getMonthKeys(sel);
+  const container=document.getElementById('admin-name-summary');
   if(!allKeys.length){container.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text-sub);font-size:0.84rem;">この月の記録はありません</div>`;return;}
 
   // 名前別集計
@@ -3124,7 +2519,7 @@ function clearTestData(){
 }
 
 // ===== AUTO DAILY RESET AT 12:00 =====
-async function checkAutoDailyReset(){
+function checkAutoDailyReset(){
   if(!orders.length)return;
   const d=now();
   const h=d.getHours(),m=d.getMinutes();
@@ -3133,8 +2528,13 @@ async function checkAutoDailyReset(){
     const resetKey='daily_reset_'+dateKey();
     if(localStorage.getItem(resetKey)==='1')return;
     localStorage.setItem(resetKey,'1');
-    // 月次に保存してリセット（クラウドから全注文取得）
-    await archiveTodayOrders();
+    // 月次に保存してリセット
+    archiveTodayOrders();
+    // Supabaseにも保存
+    const key=orderTargetKey();
+    if(dailyHistory[key]){
+      saveDailyHistoryToCloud(key, dailyHistory[key]);
+    }
     orders=[];saveOrders();
     cart=[];renderCart();
     updateBadge();
@@ -3151,7 +2551,7 @@ function getLastWeekdayOfMonth(year,month){
   while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()-1);
   return d;
 }
-async function checkAutoMonthlySend(){
+function checkAutoMonthlySend(){
   const d=now();const h=d.getHours(),m=d.getMinutes();
   if(h!==9||m!==20)return;
   const lastWeekday=getLastWeekdayOfMonth(d.getFullYear(),d.getMonth());
@@ -3159,7 +2559,7 @@ async function checkAutoMonthlySend(){
   const sentKey=`monthly_sent_${d.getFullYear()}-${pad(d.getMonth()+1)}`;
   if(localStorage.getItem(sentKey)==='1')return;
   localStorage.setItem(sentKey,'1');
-  await archiveTodayOrders();
+  archiveTodayOrders();
   const sel=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
   const{keys:allKeys,hasCurrentOrders,todayKey}=getMonthKeys(sel);
   if(!allKeys.length)return;
@@ -3174,28 +2574,13 @@ async function checkAutoMonthlySend(){
 
 // ===== TAB =====
 const TABS=['order','calendar','summary','history','receipt','monthly','admin'];
-async function switchTab(tab){
+function switchTab(tab){
   TABS.forEach(t=>{document.getElementById(`section-${t}`).classList.toggle('active',t===tab);});
   document.querySelectorAll('.tab-btn').forEach((b,i)=>{b.classList.toggle('active',TABS[i]===tab);});
-  // 集計タブから離れたら自動更新を停止
-  if(tab!=='summary'&&summaryAutoRefreshTimer){clearInterval(summaryAutoRefreshTimer);summaryAutoRefreshTimer=null;}
   // タブ切り替え時にページ先頭にスクロール
   window.scrollTo(0,0);
-  if(tab==='order'){renderTodayMenu();renderBentoList();renderCart();renderOrderStatusBanner();}
-  if(tab==='summary'){
-    // 常にクラウドから最新取得して表示（renderSummary内で実施済み）
-    await renderSummary();
-    // 30秒ごとに自動更新（他の人が注文してもリアルタイムに反映）
-    if(!summaryAutoRefreshTimer){
-      summaryAutoRefreshTimer=setInterval(()=>{
-        // バックグラウンドのタブでは更新しない（通信量節約）
-        if(document.hidden)return;
-        const activeTab=document.querySelector('.tab-btn.active');
-        if(activeTab&&activeTab.getAttribute('onclick')==="switchTab('summary')")renderSummary();
-        else{clearInterval(summaryAutoRefreshTimer);summaryAutoRefreshTimer=null;}
-      },30000);
-    }
-  }
+  if(tab==='order'){renderTodayMenu();renderBentoList();renderCart();}
+  if(tab==='summary')renderSummary();
   if(tab==='calendar')renderCalendar();
   if(tab==='receipt')renderReceiptList();
   if(tab==='monthly'){
@@ -3213,39 +2598,20 @@ async function switchTab(tab){
     });
   }
   if(tab==='history')renderHistory();
-  if(tab==='admin'&&adminUnlocked){initMonthlySelect();await renderAdminSummary();}
+  if(tab==='admin'&&adminUnlocked){initMonthlySelect();renderAdminSummary();}
 }
 function updateBadge(){document.getElementById('count-badge').textContent=orders.length;}
-function showToast(msg,type,duration){
-  const t=document.getElementById('toast');
-  t.textContent=msg;
-  t.classList.remove('error');
-  if(type==='error')t.classList.add('error');
-  t.classList.add('show');
-  setTimeout(()=>{t.classList.remove('show');t.classList.remove('error');},(duration||2800));
-}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
 
 // ===== INIT =====
-// Service Worker登録（常に最新版を取得・キャッシュ問題防止）
+// Service Worker無効化（キャッシュ問題解決）
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('/bento-order/sw.js',{scope:'/bento-order/'})
-    .then(reg=>{
-      // 新しいバージョンが見つかったら自動リロード
-      reg.addEventListener('updatefound',()=>{
-        const nw=reg.installing;
-        nw.addEventListener('statechange',()=>{
-          if(nw.state==='installed'&&navigator.serviceWorker.controller){
-            showToast('🔄 新しいバージョンを読み込んでいます...');
-            setTimeout(()=>location.reload(),1500);
-          }
-        });
-      });
-      reg.update(); // 起動ごとに更新確認
-    })
-    .catch(e=>console.log('SW登録エラー:',e));
+  navigator.serviceWorker.getRegistrations().then(regs=>{
+    regs.forEach(r=>r.unregister());
+  });
 }
 // アプリバージョンチェック（更新検知）
-const APP_VERSION='20260417000000';
+const APP_VERSION='20260331143453';
 const savedVersion=localStorage.getItem('bento_app_version');
 if(savedVersion && savedVersion!==APP_VERSION){
   // バージョンが変わっていたらキャッシュをクリア
@@ -3263,15 +2629,11 @@ if(savedVersion && savedVersion!==APP_VERSION){
 // 古いappPublicUrlを強制削除
 try{localStorage.removeItem('bento_app_public_url');}catch(e){}
 loadState();
-renderAiKeyArea();
 // AI カレンダー入力は起動時から登録
 (function(){
   const input=document.getElementById('ai-calendar-input');
   if(input) input.addEventListener('change',onAiFileSelected);
 })();
-
-// 集計タブの自動更新タイマー
-let summaryAutoRefreshTimer=null;
 
 // 起動時に当日の注文状態を確認
 // Supabaseの注文データと同期（localStorageより優先）
@@ -3289,10 +2651,6 @@ let summaryAutoRefreshTimer=null;
     }
     updateBadge();
     renderCart();
-    renderOrderStatusBanner();
-    // 集計タブが開いていれば再描画（起動時の古いデータを最新に更新）
-    const activeTab=document.querySelector('.tab-btn.active');
-    if(activeTab&&activeTab.getAttribute('onclick')==="switchTab('summary')")renderSummary();
   }catch(e){
     console.log('同期エラー:', e);
   }
@@ -3310,21 +2668,17 @@ let summaryAutoRefreshTimer=null;
     // 閉じるボタンを非表示（専用ページなので不要）
     const closeBtn=vv.querySelector('button[onclick="closeVendorView()"]');
     if(closeBtn) closeBtn.style.display='none';
-    // デフォルトは前月を表示（終わった月の集計確認が主目的のため）
+    // 最新月を自動選択して表示
     const d=now();
-    const prevDate=new Date(d.getFullYear(),d.getMonth()-1,1);
-    const sel=`${prevDate.getFullYear()}-${pad(prevDate.getMonth()+1)}`;
-    const thisMonth=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
-    // クラウドから前月・当月のデータを並行読み込み
+    const sel=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
+    // クラウドから全データ読み込み
     try{
-      const[cloudHistoryPrev,cloudHistoryThis,cloudReceipts]=await Promise.all([
+      const[cloudHistory,cloudReceipts]=await Promise.all([
         loadDailyHistoryFromCloud(sel),
-        loadDailyHistoryFromCloud(thisMonth),
         loadReceiptsFromCloud()
       ]);
-      if(Object.keys(cloudHistoryPrev).length>0){Object.assign(dailyHistory,cloudHistoryPrev);try{saveDailyHistory();}catch(e){}}
-      if(Object.keys(cloudHistoryThis).length>0){Object.assign(dailyHistory,cloudHistoryThis);try{saveDailyHistory();}catch(e){}}
-      if(Object.keys(cloudReceipts).length>0){Object.assign(receipts,cloudReceipts);try{saveReceipts();}catch(e){}}
+      if(Object.keys(cloudHistory).length>0){Object.assign(dailyHistory,cloudHistory);saveDailyHistory();}
+      if(Object.keys(cloudReceipts).length>0){Object.assign(receipts,cloudReceipts);saveReceipts();}
     }catch(e){console.error(e);}
     currentVendorSel=sel;
     renderVendorView(sel);
@@ -3332,41 +2686,22 @@ let summaryAutoRefreshTimer=null;
   }
 })();
 
-// 起動時にクラウドからメニュー・月次データを読み込む
+// 起動時にクラウドからメニューデータを読み込む
 (async function initCloudData(){
   try{
-    const d=now();
-    const thisMonth=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
-    // 先月のキーを計算
-    const prevDate=new Date(d.getFullYear(),d.getMonth()-1,1);
-    const prevMonth=`${prevDate.getFullYear()}-${pad(prevDate.getMonth()+1)}`;
-    // メニュー・納品書・当月月次・先月月次を並行読み込み
-    const[cloudMenu,cloudReceipts,cloudHistoryThis,cloudHistoryPrev]=await Promise.all([
+    // メニュー・納品書を並行読み込み
+    const[cloudMenu,cloudReceipts]=await Promise.all([
       loadMenuDataFromCloud(),
-      loadReceiptsFromCloud(),
-      loadDailyHistoryFromCloud(thisMonth),
-      loadDailyHistoryFromCloud(prevMonth)
+      loadReceiptsFromCloud()
     ]);
-    // 設定をクラウドから読み込み（APIキー・Slack・LINE URL を全デバイスで共有）
-    await loadSettingsFromCloud();
-    // 設定読み込み後にUIを更新
-    renderAiKeyArea();
     if(Object.keys(cloudMenu).length>0){
       Object.assign(menuData,cloudMenu);
       saveMenuData();
     }
     if(Object.keys(cloudReceipts).length>0){
       Object.assign(receipts,cloudReceipts);
-      try{saveReceipts();}catch(e){localStorage.removeItem('bento_receipts');}
+      saveReceipts();
     }
-    // 月次履歴をクラウドから上書き（常に正しいデータを保持）
-    if(Object.keys(cloudHistoryThis).length>0){
-      Object.assign(dailyHistory,cloudHistoryThis);
-    }
-    if(Object.keys(cloudHistoryPrev).length>0){
-      Object.assign(dailyHistory,cloudHistoryPrev);
-    }
-    try{saveDailyHistory();}catch(e){localStorage.removeItem('bento_daily_history');}
     renderTodayMenu();
     renderBentoList();
     renderCalendar();
